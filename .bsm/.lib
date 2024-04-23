@@ -5,12 +5,31 @@
 # Vars
 __cwd=`pwd`
 prgroot="$HOME/.bsm"
+scriptroot="$HOME/scripts"
 
 # Funcs
 __args() {
   # Process args
   while [[ "$1" =~ '-' ]]; do
     case "$1" in
+      -c | --create )
+        shift
+        exit;;
+      -o | --open )
+        shift
+        exit;;
+      -r | --remove )
+        shift
+        exit;;
+      -R | --rename )
+        shift
+        exit;;
+      -C | --config )
+        shift
+        exit;;
+      -l | --list )
+        __list
+        ;;
       -i | --interactive )
         __sh
         exit;;
@@ -25,7 +44,7 @@ __args() {
         echo "\"$1\" is not an argument!"
         exit;;
     esac
-  done
+  shift; done
 }
 
 __cmds() {
@@ -42,28 +61,28 @@ __cmds() {
           name="$1"
           case $sub in
             ps | ps1 | powershell )
-              create_script -P $name
+              __create -P $name
               ;;
             py | python )
-              create_script -p $name
+              __create -p $name
               ;;
             pl | perl )
-              create_script -e $name
+              __create -e $name
               ;;
             js | node )
-              create_script -n $name
+              __create -n $name
               ;;
             rb | ruby )
-              create_script -r $name
+              __create -r $name
               ;;
             cl | lisp )
-              create_script -l $name
+              __create -l $name
               ;;
             sh | bash )
-              create_script -b $name
+              __create -b $name
               ;;
             * )
-              create_script $sub
+              __create $sub
               ;;
           esac
         fi
@@ -73,45 +92,45 @@ __cmds() {
         if [[ "$name" == "" ]]; then
           echo "Missing required argument: 'NAME'"
         else
-          open_script $name
+          __open $name
         fi
         ;;
-      import )
-        script="$1"
-        if [[ "$script" == "" ]]; then
-          echo "Missing required argument: 'SCRIPT'"
-        else
-          import_script $@
-        fi
-        ;;
-      export )
-        script="$1"
-        shift
-        dest="$1"
-        if [[ "$script" == "" ]]; then
-          echo "Missing required argument: 'SCRIPT'"
-        else
-          if [[ "$dest" == "" ]]; then
-            echo "Missing required argument: 'DESTINATION'"
-          else
-            export_script $script $dest
-          fi
-        fi
-        ;;
-      link )
-        script="$1"
-        shift
-        name="$1"
-        if [[ "$script" == "" ]]; then
-          echo "Missing required argument: 'SCRIPT'"
-        else
-          if [[ "$name" == "" ]]; then
-            echo "Missing required argument: 'NAME'"
-          else
-            link_script $script $name
-          fi
-        fi
-        ;;
+      # import )
+      #   script="$1"
+      #   if [[ "$script" == "" ]]; then
+      #     echo "Missing required argument: 'SCRIPT'"
+      #   else
+      #     import_script $@
+      #   fi
+      #   ;;
+      # export )
+      #   script="$1"
+      #   shift
+      #   dest="$1"
+      #   if [[ "$script" == "" ]]; then
+      #     echo "Missing required argument: 'SCRIPT'"
+      #   else
+      #     if [[ "$dest" == "" ]]; then
+      #       echo "Missing required argument: 'DESTINATION'"
+      #     else
+      #       export_script $script $dest
+      #     fi
+      #   fi
+      #   ;;
+      # link )
+      #   script="$1"
+      #   shift
+      #   name="$1"
+      #   if [[ "$script" == "" ]]; then
+      #     echo "Missing required argument: 'SCRIPT'"
+      #   else
+      #     if [[ "$name" == "" ]]; then
+      #       echo "Missing required argument: 'NAME'"
+      #     else
+      #       link_script $script $name
+      #     fi
+      #   fi
+      #   ;;
       rename )
         name="$1"
         shift
@@ -122,7 +141,7 @@ __cmds() {
           if [[ "$newname" == "" ]]; then
             echo "Missing required argument: 'NEW_NAME'"
           else
-            rename_script $name $newname
+            __rename $name $newname
           fi
         fi
         ;;
@@ -131,7 +150,7 @@ __cmds() {
         if [[ "$name" == "" ]]; then
           echo "Missing required argument: 'SCRIPT'"
         else
-          remove_scripts $@
+          __remove $@
         fi
         ;;
       config )
@@ -142,9 +161,9 @@ __cmds() {
           echo "Missing required argument: 'RULE'"
         else
           if [[ "$value" == "" || "$value" == "config" ]]; then
-            config_bsm $rule
+            __config $rule
           else
-            config_bsm $rule $value
+            __config $rule $value
           fi
         fi
         ;;
@@ -152,7 +171,7 @@ __cmds() {
         __sh
         ;;
       list )
-        __args -l
+        __list
         ;;
       version )
         __args -v
@@ -181,3 +200,20 @@ __sh() {
     fi
   done
 }
+
+__create() {
+  # Check that the scripts folder was made
+  [ ! -d $scriptroot ] && mkdir $scriptroot
+}
+# __open() {}
+# __remove() {}
+# __rename() {}
+__list() {
+  [ ! -d $scriptroot ] && echo "No scripts created yet!" && return
+
+  echo "Scripts: "
+  for script in $scriptroot; do
+    echo " - $script"
+  done
+}
+# __config() {}

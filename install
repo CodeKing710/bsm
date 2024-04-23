@@ -5,6 +5,7 @@ install() {
   local repo=$(find $HOME -type d -name bsm)
   cp $repo/bsm $HOME/bin || return false
   cp -r $repo/.bsm $HOME || return false
+  [[ ! `cat $HOME/.bashrc` =~ "# BSM PATH ADD" ]] && ( echo -e "# BSM PATH ADD\nexport PATH=\"\$HOME/scripts:\$PATH\"" >> $HOME/.bashrc || return false )
   echo "BSM installed!"
 }
 
