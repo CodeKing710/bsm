@@ -1,0 +1,183 @@
+#!/bin/bash
+
+# BSM's Functions and Variables
+
+# Vars
+__cwd=`pwd`
+prgroot="$HOME/.bsm"
+
+# Funcs
+__args() {
+  # Process args
+  while [[ "$1" =~ '-' ]]; do
+    case "$1" in
+      -i | --interactive )
+        __sh
+        exit;;
+      -\? | -h | --help )
+        cat $prgroot/help
+        exit;;
+      -v | --version )
+        cat $prgroot/version
+        exit;;
+      * ) # Catch-all
+        cat $prgroot/help | head -1
+        echo "\"$1\" is not an argument!"
+        exit;;
+    esac
+  done
+}
+
+__cmds() {
+  while [[ "$1" != "" ]]; do
+    local cmd="${1,}"
+    shift
+    case $cmd in
+      create )
+        if [[ "$1" == "" ]]; then
+          echo "Missing required argument: 'NAME'"
+        else
+          sub="${1,}"
+          shift
+          name="$1"
+          case $sub in
+            ps | ps1 | powershell )
+              create_script -P $name
+              ;;
+            py | python )
+              create_script -p $name
+              ;;
+            pl | perl )
+              create_script -e $name
+              ;;
+            js | node )
+              create_script -n $name
+              ;;
+            rb | ruby )
+              create_script -r $name
+              ;;
+            cl | lisp )
+              create_script -l $name
+              ;;
+            sh | bash )
+              create_script -b $name
+              ;;
+            * )
+              create_script $sub
+              ;;
+          esac
+        fi
+        ;;
+      open )
+        name="$1"
+        if [[ "$name" == "" ]]; then
+          echo "Missing required argument: 'NAME'"
+        else
+          open_script $name
+        fi
+        ;;
+      import )
+        script="$1"
+        if [[ "$script" == "" ]]; then
+          echo "Missing required argument: 'SCRIPT'"
+        else
+          import_script $@
+        fi
+        ;;
+      export )
+        script="$1"
+        shift
+        dest="$1"
+        if [[ "$script" == "" ]]; then
+          echo "Missing required argument: 'SCRIPT'"
+        else
+          if [[ "$dest" == "" ]]; then
+            echo "Missing required argument: 'DESTINATION'"
+          else
+            export_script $script $dest
+          fi
+        fi
+        ;;
+      link )
+        script="$1"
+        shift
+        name="$1"
+        if [[ "$script" == "" ]]; then
+          echo "Missing required argument: 'SCRIPT'"
+        else
+          if [[ "$name" == "" ]]; then
+            echo "Missing required argument: 'NAME'"
+          else
+            link_script $script $name
+          fi
+        fi
+        ;;
+      rename )
+        name="$1"
+        shift
+        newname="$1"
+        if [[ "$name" == "" ]]; then
+          echo "Missing required argument: 'NAME'"
+        else
+          if [[ "$newname" == "" ]]; then
+            echo "Missing required argument: 'NEW_NAME'"
+          else
+            rename_script $name $newname
+          fi
+        fi
+        ;;
+      remove )
+        name="$1"
+        if [[ "$name" == "" ]]; then
+          echo "Missing required argument: 'SCRIPT'"
+        else
+          remove_scripts $@
+        fi
+        ;;
+      config )
+        rule="${1,}"
+        shift
+        value="${1,}"
+        if [[ "$rule" == "" ]]; then
+          echo "Missing required argument: 'RULE'"
+        else
+          if [[ "$value" == "" || "$value" == "config" ]]; then
+            config_bsm $rule
+          else
+            config_bsm $rule $value
+          fi
+        fi
+        ;;
+      sh | shell )
+        __sh
+        ;;
+      list )
+        __args -l
+        ;;
+      version )
+        __args -v
+        ;;
+      help )
+        __args -h
+        ;;
+      * )
+        echo "'$1': Command not found"
+        ;;
+    esac
+  shift; done
+}
+
+__sh() {
+  while true; do
+    read -p "bsm> " stdin
+    if [[ "${stdin,}" == "exit" || "${stdin,}" == "quit" ]]; then
+      exit
+    elif [[ "${stdin,}" == "pass" ]]; then
+      continue
+    elif [[ "${stdin,}" =~ "pass" ]]; then
+      bash -c "$(echo "${stdin,}" | cut -d ' ' -f2-)"
+    else
+      __cmds "${stdin,}"
+    fi
+  done
+}

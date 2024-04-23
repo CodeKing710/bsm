@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# BSM's main code
+
+# Check for unit test
+if [ $BSM_TST ]; then
+  # Load the lib from the repo and set prgroot to repo
+  echo -e "[BSM] UNIT TEST MODE! READING FROM REPO!"
+  source `find $HOME -type d -name bsm`/.bsm/.lib
+  prgroot="`find $HOME -type d -name bsm`/.bsm"
+else
+  # Check for updates
+  [ ! -d $HOME/.bsm ] && $(find $HOME -type d -name bsm)/install
+  if [[ `diff $(find $HOME -type d -name bsm)/.bsm $HOME/.bsm` ]]; then echo "Updating bsm..."; $(find $HOME -type d -name bsm)/install; fi
+
+  # Load lib
+  source $HOME/.bsm/.lib
+fi
+
+# Run like normal (should select based on prod or test)
+__bsm() {
+  # Go interactive if no arguments or commands are passed
+  if [ -z "$1" ]; then
+    __args -i
+  else
+    if [[ "$1" =~ "-" ]]; then
+      # Arg mode
+      __args $@
+    else
+      # Command mode
+      __cmds $@
+    fi
+  fi
+}
+
+__bsm $@
+
+# Cleanup for accidental sourcing
+[ "$$" -eq "$BASHPID" ] && unset __bsm __args __sh __cmds __cwd prgroot

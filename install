@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# BSM's installer
+install() {
+  local repo=$(find $HOME -type d -name bsm)
+  cp $repo/bsm $HOME/bin || return false
+  cp -r $repo/.bsm $HOME || return false
+  echo "BSM installed!"
+}
+
+install || echo "Install failed!"
