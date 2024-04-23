@@ -18,22 +18,29 @@ __args() {
     case "$1" in
       -c | --create )
         shift
+        [[ "$1" =~ '-' || -z "$1" ]] && echo "Missing required value: 'NAME'" && exit
         __create $@
         return;;
       -o | --open )
         shift
+        # [[ "$1" =~ '-' || -z "$1" ]] && echo "Missing required value: 'NAME'" && exit
         __open $1 # Can only open one file at a time so any more wouldn't make sense
         exit;;
       -r | --remove )
         shift
+        [[ "$1" =~ '-' || -z "$1" ]] && echo "Missing required value: 'NAME'" && exit
         __remove $@
         return;;
       -R | --rename )
         shift
-        exit;;
+        [[ "$1" =~ '-' || -z "$1" ]] && echo "Missing required value: 'REP_FRMT'" && exit
+        # [[ "$2" =~ '-' || -z "$2" ]] && echo "Missing required value: 'NEW-NAME'" && exit
+        __rename $@
+        return;;
       -C | --config )
         shift
-        exit;;
+        [[ "$1" =~ '-' || -z "$1" ]] && echo "Missing required value: 'RULE'" && exit
+        return;;
       -l | --list )
         __list
         ;;
@@ -56,7 +63,7 @@ __args() {
 
 __cmds() {
   while [[ "$1" != "" ]]; do
-    local cmd="${1,}"
+    local cmd="${1,,}"
     shift
     case $cmd in
       create )
@@ -68,25 +75,25 @@ __cmds() {
           name="$1"
           case $sub in
             ps | ps1 | powershell )
-              __create -P $name
+              __create $name.ps1
               ;;
             py | python )
-              __create -p $name
+              __create $name.py
               ;;
             pl | perl )
-              __create -e $name
+              __create $name.pl
               ;;
             js | node )
-              __create -n $name
+              __create $name.js
               ;;
             rb | ruby )
-              __create -r $name
+              __create $name.rb
               ;;
             cl | lisp )
-              __create -l $name
+              __create $name.cl
               ;;
             sh | bash )
-              __create -b $name
+              __create $name
               ;;
             * )
               __create $sub
@@ -102,42 +109,6 @@ __cmds() {
           __open $name
         fi
         ;;
-      # import )
-      #   script="$1"
-      #   if [[ "$script" == "" ]]; then
-      #     echo "Missing required argument: 'SCRIPT'"
-      #   else
-      #     import_script $@
-      #   fi
-      #   ;;
-      # export )
-      #   script="$1"
-      #   shift
-      #   dest="$1"
-      #   if [[ "$script" == "" ]]; then
-      #     echo "Missing required argument: 'SCRIPT'"
-      #   else
-      #     if [[ "$dest" == "" ]]; then
-      #       echo "Missing required argument: 'DESTINATION'"
-      #     else
-      #       export_script $script $dest
-      #     fi
-      #   fi
-      #   ;;
-      # link )
-      #   script="$1"
-      #   shift
-      #   name="$1"
-      #   if [[ "$script" == "" ]]; then
-      #     echo "Missing required argument: 'SCRIPT'"
-      #   else
-      #     if [[ "$name" == "" ]]; then
-      #       echo "Missing required argument: 'NAME'"
-      #     else
-      #       link_script $script $name
-      #     fi
-      #   fi
-      #   ;;
       rename )
         name="$1"
         shift
@@ -233,10 +204,10 @@ __create() {
   # Inner file generator func
   mkfile() {
     # $1 is the shebang line, $2 is the file itself
-    echo -e "$1# Script - $2\n# Purpose: XYZ\n" > ${scriptroot}/$2 && echo "Successfully created script at $scriptroot/$2!" || echo "Failed to create script $2 at $scriptroot/$2!"
+    echo -e "$1# Script - $2\n# Purpose: XYZ\n" > "${scriptroot}/$2" && echo "Successfully created script at $scriptroot/$2!" || echo "Failed to create script $2 at $scriptroot/$2!"
 
     # Set the current working script (__cws) to the newly created script
-    __cws=$2
+    __cws="$2"
   }
 
   # Finishing the loop will hand back the arg list
@@ -261,6 +232,7 @@ __open() {
   elif [ -z "$__cws" -a -n "$1" ]; then
     __cws="$1"
   fi
+
   [ -n "$__cws" ] && $editor $scriptroot/$__cws || echo "No file to open!"
 }
 
@@ -271,7 +243,19 @@ __remove() {
   shift; done; [ -n "$@" ] && __args $@
 }
 
-# __rename() {}
+# Accepted arg style: oldname>newname
+__rename() {
+  until [[ $1 =~ '-' || $1 == "" ]]; do
+    local old=`echo "$1" | cut -d '>' -f1`
+    local new=`echo "$1" | cut -d '>' -f2`
+    if [ -n "$old" -a -n "$new" ]; then
+      mv $scriptroot/$old $scriptroot/$new 2>/dev/null && echo "Successfully renamed '$old' to '$new'!"
+      __cws="$new"
+    else
+      echo "Format incorrect! Format: OLD_NAME>NEW_NAME"
+    fi
+  shift; done; [ -n "$@" ] && __args $@
+}
 
 __list() {
   local list=`ls -p1 $scriptroot | xargs -i echo "- {}"`
@@ -282,4 +266,5 @@ __list() {
   fi
 }
 
-# __config() {}
+# Variable arg style: rule rule=value
+__config() {}
