@@ -34,12 +34,12 @@ __args() {
       -R | --rename )
         shift
         [[ "$1" =~ '-' || -z "$1" ]] && echo "Missing required value: 'REP_FRMT'" && exit
-        # [[ "$2" =~ '-' || -z "$2" ]] && echo "Missing required value: 'NEW-NAME'" && exit
         __rename $@
         return;;
       -C | --config )
         shift
         [[ "$1" =~ '-' || -z "$1" ]] && echo "Missing required value: 'RULE'" && exit
+        __config $@
         return;;
       -l | --list )
         __list
@@ -168,7 +168,7 @@ __sh() {
   while true; do
     read -p "bsm> " stdin
     if [[ "${stdin,}" == "exit" || "${stdin,}" == "quit" ]]; then
-      exit
+      break
     elif [[ "${stdin,}" == "pass" ]]; then
       continue
     elif [[ "${stdin,}" =~ "pass" ]]; then
@@ -258,7 +258,7 @@ __rename() {
 }
 
 __list() {
-  local list=`ls -p1 $scriptroot | xargs -i echo "- {}"`
+  local list=`ls -p1 $scriptroot 2>/dev/null | xargs -i echo "- {}"`
   if [[ ! -d $scriptroot || "$list" == "" ]]; then
     echo "No Scripts Created Yet!"
   else
@@ -267,4 +267,16 @@ __list() {
 }
 
 # Variable arg style: rule rule=value
-__config() {}
+__config() {
+  local cfg="$prgroot/.cfg"
+  until [[ $1 =~ '-' || $1 == "" ]]; do
+    if [[ $1 =~ '=' ]]; then
+      local rule="`echo "$1" | cut -d '=' -f1`"
+      local oldvalue="`cat $cfg | grep "$rule" | cut -d '=' -f2`"
+      local newvalue="`echo "$1" | cut -d '=' -f2`"
+      sed -i -e "s/$rule=$oldvalue/$rule=$newvalue/" $cfg
+      echo "Updated rule $rule from $oldvalue to $newvalue!"
+    fi
+    echo "Rule: `cat $cfg | grep "$1"`"
+  shift; done; [ -n "$@" ] && __args $@
+}
