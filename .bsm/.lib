@@ -4,23 +4,30 @@
 
 # Vars
 __cwd=`pwd`
+__cws=""
 prgroot="$HOME/.bsm"
 scriptroot="$HOME/scripts"
+editor=`cat $prgroot/.cfg | head -1 | cut -d '=' -f2`
 
 # Funcs
 __args() {
   # Process args
-  while [[ "$1" =~ '-' ]]; do
+  # Exit means arg list is not passed
+  # Return means arg list recursively passed
+  while [[ $1 =~ '-' ]]; do
     case "$1" in
       -c | --create )
         shift
-        exit;;
+        __create $@
+        return;;
       -o | --open )
         shift
+        __open $1 # Can only open one file at a time so any more wouldn't make sense
         exit;;
       -r | --remove )
         shift
-        exit;;
+        __remove $@
+        return;;
       -R | --rename )
         shift
         exit;;
@@ -204,16 +211,75 @@ __sh() {
 __create() {
   # Check that the scripts folder was made
   [ ! -d $scriptroot ] && mkdir $scriptroot
-}
-# __open() {}
-# __remove() {}
-# __rename() {}
-__list() {
-  [ ! -d $scriptroot ] && echo "No scripts created yet!" && return
 
-  echo "Scripts: "
-  for script in $scriptroot; do
-    echo " - $script"
-  done
+  # Inner type select func
+  proctype() {
+    if [[ "$name" =~ ".js" ]]; then # Node
+      mkfile "#!/bin/env\n\n" "${name%.***}"
+    elif [[ "$name" =~ ".py" ]]; then # Python
+      mkfile "#!/bin/env\n\n" "${name%.***}"
+    elif [[ "$name" =~ ".rb" ]]; then # Ruby
+      mkfile "#!/bin/env\n\n" "${name%.***}"
+    elif [[ "$name" =~ ".cl" ]]; then # LISP
+      mkfile "#!/bin/env\n\n" "${name%.***}"
+    elif [[ "$name" =~ ".ps1" ]]; then # PowerShell
+      mkfile "#!/bin/env\n\n" "${name%.***}"
+    elif [[ "$name" =~ ".pl" ]]; then #Perl
+      mkfile "#!/bin/env\n\n" "${name%.***}"
+    else # Bash
+      mkfile "#!/bin/bash\n\n" "${name%.***}"
+    fi
+  }
+  # Inner file generator func
+  mkfile() {
+    # $1 is the shebang line, $2 is the file itself
+    echo -e "$1# Script - $2\n# Purpose: XYZ\n" > ${scriptroot}/$2 && echo "Successfully created script at $scriptroot/$2!" || echo "Failed to create script $2 at $scriptroot/$2!"
+
+    # Set the current working script (__cws) to the newly created script
+    __cws=$2
+  }
+
+  # Finishing the loop will hand back the arg list
+  # This behavior is only necessity for args that accept
+  # unlimited values that are then followed by more args
+  until [[ $1 =~ '-' || $1 == "" ]]; do
+    local name=$1
+
+    # Check for conflict of name
+    if [ -e $scriptroot/$name ]; then
+      read -p "The script $name already exists! Did you want to overwrite? [Y\n] " yn
+      [[ "${yn,,}" =~ "y" ]] && proctype $name || echo "Keeping original script '$name'"
+    else
+      proctype $name
+    fi
+  shift; done; [ -n "$@" ] && __args $@
 }
+
+__open() {
+  if [ -n "$1" ]; then # Arg passed
+    __cws=$1 # Set
+  elif [ -z "$__cws" -a -n "$1" ]; then
+    __cws="$1"
+  fi
+  [ -n "$__cws" ] && $editor $scriptroot/$__cws || echo "No file to open!"
+}
+
+__remove() {
+  until [[ $1 =~ '-' || $1 == "" ]]; do
+    local name=$1
+    rm $scriptroot/$name 2>/dev/null && echo "Successfully removed script '$name'" || echo "Unable to remove script '$name'"
+  shift; done; [ -n "$@" ] && __args $@
+}
+
+# __rename() {}
+
+__list() {
+  local list=`ls -p1 $scriptroot | xargs -i echo "- {}"`
+  if [[ ! -d $scriptroot || "$list" == "" ]]; then
+    echo "No Scripts Created Yet!"
+  else
+    echo -e "Scripts:\n$list"
+  fi
+}
+
 # __config() {}
