@@ -8,9 +8,6 @@ Options:
     -l | --list
 	    Show list of available personal scripts
 
-    -L | --link [FILE] [DEST_NAME]
-	    Create a shortcut executable to an existing script. FILE points to the file to link, DEST_NAME points to where the link will reside.
-
     -o | --open [NAME]
 	    Open a script for editing (ONLY PERSONAL SCRIPTS LOCATED AT /scripts).
         Makes a new script respective to the env path (file ext). Bash creation does not require this.
@@ -19,14 +16,8 @@ Options:
     -r | --remove [NAME] [...NAMES]
 	    Remove script(s) from personal scripts (DOES NOT TOUCH SYSTEM EXECUTABLES)
 
-    -i | --import [PATH] [...]
-        Import external scripts directly to BSM
-
     -n | --rename [SCRIPT]
         Renames a script
-
-    -e | --export [SCRIPT] [PATH]
-        Exports BSM script to specific location
 
     -C | --config [RULE] [...VALUE]
         Gets or sets BSM configuration rule. Chain multiple together to get or set multiple rules
