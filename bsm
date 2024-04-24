@@ -2,18 +2,23 @@
 
 # BSM's main code
 
+# Set some configs prior to loading
+autoupdate=`cat $HOME/.bsm/.cfg | grep 'autoupdate' | cut -d '=' -f2`
+
 # Check for unit test
 if [ $BSM_TST ]; then
   # Load the lib from the repo and set prgroot to repo
   echo -e "[BSM] UNIT TEST MODE! READING FROM REPO!"
   source `find $HOME -type d -name bsm`/.bsm/.lib
   prgroot="`find $HOME -type d -name bsm`/.bsm"
-else
+elif [ $autoupdate ]; then
   # Check for updates
   [ ! -d $HOME/.bsm ] && $(find $HOME -type d -name bsm)/install
-  if [[ `diff $(find $HOME -type d -name bsm)/.bsm $HOME/.bsm` ]]; then echo "Updating bsm..."; $(find $HOME -type d -name bsm)/install; fi
+  if [[ `diff $(find $HOME -type d -name bsm)/.bsm/.lib $HOME/.bsm/.lib` || `diff $(find $HOME -type d -name bsm)/.bsm/version $HOME/.bsm/version` || `diff $(find $HOME -type d -name bsm)/.bsm/help $HOME/.bsm/help` ]]; then echo "Update found!"; $(find $HOME -type d -name bsm)/install; fi
 
   # Load lib
+  source $HOME/.bsm/.lib
+else
   source $HOME/.bsm/.lib
 fi
 

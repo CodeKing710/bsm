@@ -49,9 +49,22 @@ __args() {
         exit;;
       -\? | -h | --help )
         cat $prgroot/help
-        exit;;
+        return;; # Because cmd mode references these options
       -v | --version )
         cat $prgroot/version
+        return;; # Because cmd mode references these options
+      --update )
+        echo "Checking for updates..."
+        if [[ `diff $(find $HOME -type d -name bsm)/.bsm/.lib $HOME/.bsm/.lib` || `diff $(find $HOME -type d -name bsm)/.bsm/version $HOME/.bsm/version` || `diff $(find $HOME -type d -name bsm)/.bsm/help $HOME/.bsm/help` ]]; then 
+          echo "Updating BSM..."
+          $(find $HOME -type d -name bsm)/install && echo "Successfully installed BSM!"
+        else
+          echo "BSM up-to-date!"
+        fi
+        exit;;
+      --reset )
+        echo "Resetting BSM to default configuration..."
+        cp -rf $(find $HOME -type d -name bsm)/.bsm $HOME && echo "BSM has been reset!" || echo "Failed to reset defaults!"
         exit;;
       * ) # Catch-all
         cat $prgroot/help | head -1
@@ -99,6 +112,12 @@ __cmds() {
         ;;
       help )
         __args -h
+        ;;
+      update )
+        __args --update
+        ;;
+      reset )
+        __args --reset
         ;;
       * )
         echo "'$1': Command not found"
@@ -220,6 +239,6 @@ __config() {
       sed -i -e "s/$rule=$oldvalue/$rule=$newvalue/" $cfg
       echo "Updated rule $rule from $oldvalue to $newvalue!"
     fi
-    echo "Rule: `cat $cfg | grep "$1"`"
+    echo "Rule: `cat $cfg | grep "$1" || echo "No Rule Found!"`"
   shift; done; [ -n "$@" ] && __args $@
 }
