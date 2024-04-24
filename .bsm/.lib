@@ -66,6 +66,12 @@ __args() {
         echo "Resetting BSM to default configuration..."
         cp -rf $(find $HOME -type d -name bsm)/.bsm $HOME && echo "BSM has been reset!" || echo "Failed to reset defaults!"
         exit;;
+      --uninstall )
+        __uninstall
+        exit;;
+      --dependencies )
+        __getdeps
+        exit;;
       * ) # Catch-all
         cat $prgroot/help | head -1
         echo "\"$1\" is not an argument!"
@@ -118,6 +124,12 @@ __cmds() {
         ;;
       reset )
         __args --reset
+        ;;
+      uninstall )
+        __uninstall
+        exit;;
+      getdeps )
+        __getdeps
         ;;
       * )
         echo "'$1': Command not found"

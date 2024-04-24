@@ -1,7 +1,7 @@
 Usage: bsm [OPTIONS] ...
 
 Options:
-    -c | --create [NAME] [OPTIONS]
+    -c | --create <NAME> [...]
 	    Add new script(s) to your personal scripts. Specify a file extension to use a specific scripting language. Bash is default and doesn't require a file extension. You may also specify the script type by following this argument with '-p', '-n', '-r', or '-l'. Please note that even though those arguments exist outside '-c', using them here changes their meaning.
 	    Available: .js (-n), .py (-p), .rb (-r), .cl (-l), .pl (-e), .ps1 (-P)
 
@@ -9,17 +9,19 @@ Options:
 	    Show list of available personal scripts
 
     -o | --open [NAME]
-	    Open a script for editing (ONLY PERSONAL SCRIPTS LOCATED AT /scripts).
-        Makes a new script respective to the env path (file ext). Bash creation does not require this.
-        Will still open respective file even if env path is provided
+	    Open a script for editing.
+        Will still open respective file even if env path is provided.
+        Works in tandem with create and rename, if passed after a creation
+        name is not required as the current working script will be the last name passed
+        to create or rename. i.e. bsm --create script --open
 
-    -r | --remove [NAME] [...NAMES]
+    -r | --remove <NAME> [...]
 	    Remove script(s) from personal scripts (DOES NOT TOUCH SYSTEM EXECUTABLES)
 
-    -n | --rename [SCRIPT]
-        Renames a script
+    -n | --rename <SCRIPT> <NEW_NAME> [...]
+        Renames scripts
 
-    -C | --config [RULE] [...VALUE]
+    -C | --config <RULE> [VALUE] [...]
         Gets or sets BSM configuration rule. Chain multiple together to get or set multiple rules
 
     -v | --version
@@ -27,6 +29,13 @@ Options:
 
     -h | --help
         Show this screen
+
+Special Options:
+    --update
+        Force updates BSM (Only really necessary if you turned off auto-updates)
+
+    --reset
+        Reset BSM configuration to defaults
 
 For more information and available commands, visit https://github.com/CodeKing710/bsm#readme.
 Man page in progress
