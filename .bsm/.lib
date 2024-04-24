@@ -239,6 +239,6 @@ __config() {
       sed -i -e "s/$rule=$oldvalue/$rule=$newvalue/" $cfg
       echo "Updated rule $rule from $oldvalue to $newvalue!"
     fi
-    echo "Rule: `cat $cfg | grep "$1" || echo "No Rule Found!"`"
+    echo "Rule: `cat $cfg | grep "\b$1\b" || echo "No Rule Found!"`"
   shift; done; [ -n "$@" ] && __args $@
 }
