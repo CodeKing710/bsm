@@ -63,88 +63,31 @@ __args() {
 
 __cmds() {
   while [[ "$1" != "" ]]; do
-    local cmd="${1,,}"
-    shift
-    case $cmd in
+    case "${1,,}" in
       create )
-        if [[ "$1" == "" ]]; then
-          echo "Missing required argument: 'NAME'"
-        else
-          sub="${1,}"
-          shift
-          name="$1"
-          case $sub in
-            ps | ps1 | powershell )
-              __create $name.ps1
-              ;;
-            py | python )
-              __create $name.py
-              ;;
-            pl | perl )
-              __create $name.pl
-              ;;
-            js | node )
-              __create $name.js
-              ;;
-            rb | ruby )
-              __create $name.rb
-              ;;
-            cl | lisp )
-              __create $name.cl
-              ;;
-            sh | bash )
-              __create $name
-              ;;
-            * )
-              __create $sub
-              ;;
-          esac
-        fi
+        shift
+        [[ "$1" =~ '-' || -z "$1" ]] && echo "Missing required value: 'NAME'" && exit
+        __create $@
         ;;
       open )
-        name="$1"
-        if [[ "$name" == "" ]]; then
-          echo "Missing required argument: 'NAME'"
-        else
-          __open $name
-        fi
-        ;;
+        shift
+        __open $1
+        exit;;
       rename )
-        name="$1"
         shift
-        newname="$1"
-        if [[ "$name" == "" ]]; then
-          echo "Missing required argument: 'NAME'"
-        else
-          if [[ "$newname" == "" ]]; then
-            echo "Missing required argument: 'NEW_NAME'"
-          else
-            __rename $name $newname
-          fi
-        fi
-        ;;
+        [[ "$1" =~ '-' || -z "$1" ]] && echo "Missing required value: 'REP_FRMT'" && exit
+        __rename $@
+        return;;
       remove )
-        name="$1"
-        if [[ "$name" == "" ]]; then
-          echo "Missing required argument: 'SCRIPT'"
-        else
-          __remove $@
-        fi
-        ;;
-      config )
-        rule="${1,}"
         shift
-        value="${1,}"
-        if [[ "$rule" == "" ]]; then
-          echo "Missing required argument: 'RULE'"
-        else
-          if [[ "$value" == "" || "$value" == "config" ]]; then
-            __config $rule
-          else
-            __config $rule $value
-          fi
-        fi
-        ;;
+        [[ "$1" =~ '-' || -z "$1" ]] && echo "Missing required value: 'NAME'" && exit
+        __remove $@
+        return;;
+      config )
+        shift
+        [[ "$1" =~ '-' || -z "$1" ]] && echo "Missing required value: 'RULE'" && exit
+        __config $@
+        return;;
       sh | shell )
         __sh
         ;;
@@ -243,6 +186,15 @@ __remove() {
   shift; done; [ -n "$@" ] && __args $@
 }
 
+__list() {
+  local list=`ls -p1 $scriptroot 2>/dev/null | xargs -i echo "- {}"`
+  if [[ ! -d $scriptroot || "$list" == "" ]]; then
+    echo "No Scripts Created Yet!"
+  else
+    echo -e "Scripts:\n$list"
+  fi
+}
+
 # Accepted arg style: oldname>newname
 __rename() {
   until [[ $1 =~ '-' || $1 == "" ]]; do
@@ -255,15 +207,6 @@ __rename() {
       echo "Format incorrect! Format: OLD_NAME>NEW_NAME"
     fi
   shift; done; [ -n "$@" ] && __args $@
-}
-
-__list() {
-  local list=`ls -p1 $scriptroot 2>/dev/null | xargs -i echo "- {}"`
-  if [[ ! -d $scriptroot || "$list" == "" ]]; then
-    echo "No Scripts Created Yet!"
-  else
-    echo -e "Scripts:\n$list"
-  fi
 }
 
 # Variable arg style: rule rule=value
