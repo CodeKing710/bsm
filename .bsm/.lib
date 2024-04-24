@@ -254,3 +254,23 @@ __config() {
     echo "Rule: `cat $cfg | grep "\b$1\b" || echo "No Rule Found!"`"
   shift; done; [ -n "$@" ] && __args $@
 }
+
+__uninstall() {
+  read -p "Are you sure you want to uninstall BSM? [Y\n] " yn
+  if [[ "${yn,,}" =~ 'y' ]]; then
+    echo "Uninstalling BSM..."
+
+    read -p "Did you want to remove the repo as well? [Y\n] " yn
+    if [[ "${yn,,}" =~ 'y' ]]; then
+      echo "Removing repo..."
+    else
+      echo "Keeping the repo"
+    fi
+  fi
+}
+
+__getdeps() {
+  [ "$TERM_PROGRAM" = "mintty" ] && echo "You must manually install the dependencies for Git Bash!" && return
+  
+  echo "Retrieving BSM dependencies..."
+}
