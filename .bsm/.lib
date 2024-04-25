@@ -250,6 +250,10 @@ __config() {
       local newvalue="`echo "$1" | cut -d '=' -f2`"
       sed -i -e "s/$rule=$oldvalue/$rule=$newvalue/" $cfg
       echo "Updated rule $rule from $oldvalue to $newvalue!"
+    elif [[ $1 == 'list' ]]; then
+      echo "Current Settings:"
+      cat $cfg
+      return
     fi
     echo "Rule: `cat $cfg | grep "\b$1\b" || echo "No Rule Found!"`"
   shift; done; [ -n "$@" ] && __args $@
