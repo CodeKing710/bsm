@@ -11,3 +11,6 @@
 - Support to create Python scripts that point to a specific virtual environment
 - Support to create node apps that reference outside packages (Node Packaged Environments - like VEM)
 - Colored output
+
+# Outstanding Bugs
+- B-000001: Command mode does not hand off names correctly (multi-arg-acceptance reads commands as args)
