@@ -5,6 +5,7 @@
 # Vars
 __cwd=`pwd`
 __cws=""
+__cmds=( '' '' '' )
 prgroot="$HOME/.bsm"
 scriptroot="$HOME/scripts"
 
@@ -185,8 +186,11 @@ __create() {
     elif [[ "$name" =~ ".pl" ]]; then
       mkfile "#!/bin/perl\n\n" "${name%.***}"
     # Bash
-    else
+    elif [[ "$name" =~ ".sh" ]]; then
       mkfile "#!/bin/bash\n\n" "${name%.***}"
+    # Default script type
+    else
+      mkfile "#!/bin/env ${defaulttype/lisp/-S sbcl --script}\n\n" "${name%.***}"
     fi
   }
   # Inner file generator func
