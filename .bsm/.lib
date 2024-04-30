@@ -7,9 +7,16 @@ __cwd=`pwd`
 __cws=""
 prgroot="$HOME/.bsm"
 scriptroot="$HOME/scripts"
-editor=`cat $prgroot/.cfg | head -1 | cut -d '=' -f2`
 
 # Funcs
+__loadcfg() {
+  local cfg="$prgroot/.cfg"
+  editor=`cat $cfg | grep 'editor' | cut -d '=' -f2`
+  defaulttype=`cat $cfg | grep 'defaulttype' | cut -d '=' -f2`
+}
+# Config vars will be set via function in-case of needing reloaded
+__loadcfg
+
 __args() {
   # Process args
   # Exit means arg list is not passed
@@ -159,19 +166,26 @@ __create() {
 
   # Inner type select func
   proctype() {
-    if [[ "$name" =~ ".js" ]]; then # Node
-      mkfile "#!/bin/env\n\n" "${name%.***}"
-    elif [[ "$name" =~ ".py" ]]; then # Python
-      mkfile "#!/bin/env\n\n" "${name%.***}"
-    elif [[ "$name" =~ ".rb" ]]; then # Ruby
-      mkfile "#!/bin/env\n\n" "${name%.***}"
-    elif [[ "$name" =~ ".cl" ]]; then # LISP
-      mkfile "#!/bin/env\n\n" "${name%.***}"
-    elif [[ "$name" =~ ".ps1" ]]; then # PowerShell
-      mkfile "#!/bin/env\n\n" "${name%.***}"
-    elif [[ "$name" =~ ".pl" ]]; then #Perl
-      mkfile "#!/bin/env\n\n" "${name%.***}"
-    else # Bash
+    # Node
+    if [[ "$name" =~ ".js" ]]; then
+      mkfile "#!/bin/env node\n\n" "${name%.***}"
+    # Python
+    elif [[ "$name" =~ ".py" ]]; then
+      mkfile "#!/bin/env python\n\n" "${name%.***}"
+    # Ruby
+    elif [[ "$name" =~ ".rb" ]]; then
+      mkfile "#!/bin/env ruby\n\n" "${name%.***}"
+    # LISP
+    elif [[ "$name" =~ ".cl" ]]; then
+      mkfile "#!/bin/env -S sbcl --script\n\n" "${name%.***}"
+    # PowerShell
+    elif [[ "$name" =~ ".ps1" ]]; then
+      mkfile "#!/bin/env powershell\n\n" "${name%.***}"
+    # Perl
+    elif [[ "$name" =~ ".pl" ]]; then
+      mkfile "#!/bin/perl\n\n" "${name%.***}"
+    # Bash
+    else
       mkfile "#!/bin/bash\n\n" "${name%.***}"
     fi
   }
@@ -259,6 +273,7 @@ __config() {
   shift; done; [ -n "$@" ] && __args $@
 }
 
+# NOT DONE YET (STUB)
 __uninstall() {
   read -p "Are you sure you want to uninstall BSM? [Y\n] " yn
   if [[ "${yn,,}" =~ 'y' ]]; then
@@ -273,6 +288,7 @@ __uninstall() {
   fi
 }
 
+# NOT DONE YET (STUB)
 __getdeps() {
   [ "$TERM_PROGRAM" = "mintty" ] && echo "You must manually install the dependencies for Git Bash!" && return
   
