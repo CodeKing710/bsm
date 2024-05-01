@@ -4,17 +4,18 @@
 
 # Set some configs prior to loading
 autoupdate=`cat $HOME/.bsm/.cfg | grep 'autoupdate' | cut -d '=' -f2`
+repo=`find $HOME -type d -name bsm`
 
 # Check for unit test
 if [[ $BSM_TST ]]; then
   # Load the lib from the repo and set prgroot to repo
   echo -e "[BSM] UNIT TEST MODE! READING FROM REPO!"
-  source `find $HOME -type d -name bsm`/.bsm/.lib
-  prgroot="`find $HOME -type d -name bsm`/.bsm"
+  source $repo/.bsm/.lib
+  prgroot="$repo/.bsm"
 elif [[ $autoupdate ]]; then
   # Check for updates
-  [ ! -d $HOME/.bsm ] && $(find $HOME -type d -name bsm)/install
-  if [[ `diff $(find $HOME -type d -name bsm)/.bsm/.lib $HOME/.bsm/.lib` || `diff $(find $HOME -type d -name bsm)/.bsm/version $HOME/.bsm/version` || `diff $(find $HOME -type d -name bsm)/.bsm/help $HOME/.bsm/help` ]]; then echo "Update found!"; $(find $HOME -type d -name bsm)/install; fi
+  [ ! -d $HOME/.bsm ] && $repo/install
+  if [[ `diff $repo/.bsm/.lib $HOME/.bsm/.lib` || `diff $(find $HOME -type d -name bsm)/.bsm/version $HOME/.bsm/version` || `diff $repo/.bsm/help $HOME/.bsm/help` ]]; then echo "Update found!"; $repo/install; fi
 
   # Load lib
   source $HOME/.bsm/.lib
@@ -41,4 +42,4 @@ __bsm() {
 __bsm $@
 
 # Cleanup for accidental sourcing
-[ "$$" -eq "$BASHPID" ] && unset __bsm __args __sh __cmds __create __open __remove __rename __config __list __cwd __cws __cmds prgroot scriptroot editor autoupdate defaulttype
+[ "$$" -eq "$BASHPID" ] && unset __bsm __args __sh __cmds __create __open __remove __rename __config __list __cwd __cws __cmds prgroot scriptroot editor autoupdate defaulttype repo
