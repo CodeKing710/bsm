@@ -8,15 +8,15 @@
 - Default script type settings
 
 # What's Next
-- Colored output
-- Value lists for commands and rule sets
+- [DONE] Colored output
+- [IN-PROGRESS] Value lists for commands and rule sets
 - Finalize release of BSM 3, begin BSM 3.1
 - Support to create Python scripts that point to a specific virtual environment
 - Support to create node apps that reference outside packages (Node Packaged Environments - like VEM)
 
 # Bugs
 ## Key:
-**CB=CLApp Bug**
+**BB=BSM Bug**
 **R=Resolved**
 **O=Outstanding**
 **D=Deleted**
