@@ -8,8 +8,8 @@
 - Default script type settings
 - Color output
 
-# What's Next (v3.1.0)
-- Support to create Python scripts that point to a specific virtual environment
+# What's Next (v3.1.1)
+- [DONE] Support to create Python scripts that point to a specific virtual environment
 - Support to create node apps that reference outside packages (Node Packaged Environments - like VEM)
 
 # Bugs
@@ -20,7 +20,8 @@
 **D=Deleted**
 
 - BB000000 [R]: Command mode does not hand off names correctly (multi-arg-acceptance reads commands as args)
-    - Command mode will be specific to the bsm shell, use of commands outside of the shell will result in errors
+        - Functions as expected now!
 
 - BB000001 [R]: Autoupdate will cause issues by executing updated and old code while the new files get copied (race condition)
     - Turn off autoupdate until a better solution can be found
+    - Problem only occurs every once in a while or when a specific command is run, generally ok to keep AU enabled
