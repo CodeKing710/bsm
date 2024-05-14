@@ -8,9 +8,8 @@ __cws=""
 prgroot="$HOME/.bsm"
 scriptroot="$HOME/scripts"
 declare -A lists
-lists[cmds]="'create' 'open' 'rename' 'remove' 'config' 'sh' 'shell' 'list' 'version' 'help' 'update' 'reset' 'uninstall' 'getdeps'"
-lists[cfg_bool]="'true' 'false'"
-lists[cfg_type]="'bash' 'sh' 'python' 'py' 'node' 'js' 'ruby' 'rb' 'lisp' 'cl' perl' 'pl'"
+# lists[cmds]="create open rename remove config sh shell list version help update reset uninstall getdeps"
+lists[cfg_type]="bash sh python py node js ruby rb lisp cl perl pl"
 
 # Output functions
 error() { echo -e "\e[31m[ERROR]\e[0m $1" >&2; }
@@ -27,6 +26,14 @@ __loadcfg() {
 }
 # Config vars will be set via function in-case of needing reloaded
 __loadcfg
+
+# isCmd() {
+#   local cmds=("${lists[cmds]}")
+#   for cmd in $cmds; do
+#     [[ "$cmd" == "$1" ]] && return "true"
+#   done
+#   return ""
+# }
 
 __args() {
   # Process args
@@ -94,15 +101,21 @@ __args() {
         __getdeps
         exit;;
       * ) # Catch-all
-        cat $prgroot/help | head -1
-        echo "\"$1\" is not an argument!"
-        exit;;
+        # verbose "`isCmd "$1"`"
+        # if [[ `isCmd "$1"` ]]; then
+        #   __cmds "$@"
+        # else
+          cat $prgroot/help | head -1
+          echo "\"$1\" is not an argument!"
+          exit
+        # fi
+        return;;
     esac
   shift; done
 }
 
 __cmds() {
-  while [[ "$1" != "" ]]; do
+  while [[ ! "$1" == "" ]]; do
     case "${1,,}" in
       create )
         shift
@@ -219,8 +232,12 @@ __create() {
   # Finishing the loop will hand back the arg list
   # This behavior is only necessity for args that accept
   # unlimited values that are then followed by more args
+  echo "$1"
   until [[ $1 =~ '-' || $1 == "" ]]; do
     local name=$1
+    
+    # Check that the arg isn't a command
+    # verbose `isCmd "$name"`
     verbose "Script name: $name"
 
     # Check for conflict of name
@@ -281,8 +298,35 @@ __config() {
       local rule="`echo "$1" | cut -d '=' -f1`"
       local oldvalue="`cat $cfg | grep "$rule" | cut -d '=' -f2`"
       local newvalue="`echo "$1" | cut -d '=' -f2`"
-      sed -i -e "s/$rule=$oldvalue/$rule=$newvalue/" $cfg
-      write "Updated rule $rule from $oldvalue to $newvalue!"
+      # Check value lists for specific settings
+      case "$rule" in
+        autoupdate ) # Bool rules
+          if [[ ! "$newvalue" =~ ^(true|false)$ ]]; then
+            error "Value must be a boolean!"
+            exit
+          else
+            verbose "Setting rule from $oldvalue to $newvalue"
+            sed -i -e "s/$rule=$oldvalue/$rule=$newvalue/" $cfg
+            write "Updated rule $rule from $oldvalue to $newvalue!"
+          fi
+          ;;
+        defaulttype ) # Type rules
+          local types=("${lists[cfg_type]}")
+          for type in $types; do
+            if [[ "$type" == "$newvalue" ]]; then
+              verbose "Setting rule from $oldvalue to $newvalue"
+              sed -i -e "s/$rule=$oldvalue/$rule=$newvalue/" $cfg
+              write "Updated rule $rule from $oldvalue to $newvalue!"
+              break
+            fi
+          done
+          ;;
+        * ) # Any other rules
+          verbose "Setting rule from $oldvalue to $newvalue"
+          sed -i -e "s/$rule=$oldvalue/$rule=$newvalue/" $cfg
+          write "Updated rule $rule from $oldvalue to $newvalue!"
+          ;;
+      esac
     elif [[ $1 == 'list' ]]; then
       echo "Current Settings:"
       cat $cfg
@@ -294,24 +338,31 @@ __config() {
   shift; done; [ -n "$@" ] && __args $@
 }
 
-# NOT DONE YET (STUB)
 __uninstall() {
   read -p "Are you sure you want to uninstall BSM? [Y\n] " yn
   if [[ "${yn,,}" =~ 'y' ]]; then
-    echo "Uninstalling BSM..."
+    write "Uninstalling BSM..."
+    rm $HOME/bin/bsm
+    rm -r $HOME/.bsm
 
     read -p "Did you want to remove the repo as well? [Y\n] " yn
     if [[ "${yn,,}" =~ 'y' ]]; then
-      echo "Removing repo..."
+      write "Removing repo..."
+      rm -r $repo
     else
-      echo "Keeping the repo"
+      write "Keeping the repo"
     fi
+    write "Successfully removed BSM!"
   fi
 }
 
-# NOT DONE YET (STUB)
+# Testing phase
 __getdeps() {
-  [ "$TERM_PROGRAM" = "mintty" ] && echo "You must manually install the dependencies for Git Bash!" && return
+  [ "$TERM_PROGRAM" = "mintty" ] && error "You must manually install the dependencies for Git Bash!" && return
   
-  echo "Retrieving BSM dependencies..."
+  write "Retrieving BSM dependencies..."
+  sudo apt-get install nodejs
+  sudo apt-get install python
+  sudo apt-get install ruby
+  sudo apt-get install sbcl
 }
