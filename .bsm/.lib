@@ -199,7 +199,19 @@ __create() {
     # Node
     if [[ "$name" =~ ".js" ]]; then
       if [[ $env ]]; then
-        [[ ! `command -v vem` ]] && echo -e "Must install Virtual Environment Manager to take advantage of Node Virtual Environments!\nRun \`git clone https://github.com/CodeKing710/vem; vem/install;\` to download and install VEM!" && exit
+        # [[ ! `command -v vem` ]] && echo -e "Must install Virtual Environment Manager to take advantage of Node Virtual Environments!\nRun \`git clone https://github.com/CodeKing710/vem; vem/install;\` to download and install VEM!" && exit
+        # VEM is optional to be able to manage your envs
+        # To allow reference, use the path to THE PARENT FOLDER of the node_modules folder that has the desired packages
+        # If VEM is installed, it will list your envs and check if the name exists then use that path
+        # Paths detected by the '/' that exists in each path
+        if [[ `command -v vem` ]]; then
+          local vemenv=`vem js list | grep "$envpath"`
+          [[ -z $vemenv ]] && error "No VEM env with name $envpath!" && exit
+          envpath=$(vem js --path "$vemenv")
+        else
+          # Assume path, bail upon no path
+          [[ ! "$envpath" =~ '/' ]] && error "VEM must be installed to use names!\nIf this is a path, please prepend it with './' or use the absolute path!" && exit
+        fi
         if [[ ! -e "$envpath" ]]; then
           error "Environment path doesn't exist!"
           error "$envpath"
@@ -207,7 +219,8 @@ __create() {
         else
           # envshebang="#!$envpath/"
           envpath="$envpath/node_modules/"
-          mkfile "${envshebang}node\n\n" "${name%.***}" "//" "const venv = '`[[ $TERM_PROGRAM == 'mintty' ]] && echo $(cygpath -w "$envpath" | tr -s '\\\\' '\\\\\\\\') || echo "$envpath"`'"
+          [[ $TERM_PROGRAM == 'mintty' ]] && envpath=$(cygpath -w "$envpath" | sed -e 's;\\;/;g;' | sed -e 's;/;//;g;' | sed -e 's;//;\\\\\\\\;g;') || envpath="$envpath"
+          mkfile "${envshebang}node\n\n" "${name%.***}" "//" "const venv = '$envpath'\nconst getpkg = (loc) => {\n\t/**\n\t\tWith this being a venv,\n\t\tevery reference to a package that isn't directly in the project\n\t\tmust go through this wrapper\n\t\tto ensure node is looking in the right place.\n\n\t\tIf you are getting a package relative to your project,\n\t\tUSE REQUIRE!! Or use ESM import syntax\n\t**/\n\trequire(\`\${venv}\${loc}\`);\n}\n"
         fi
       else
         mkfile "${envshebang}node\n\n" "${name%.***}" "//"
@@ -249,9 +262,10 @@ __create() {
   mkfile() {
     # $1 is the shebang line, $2 is the file itself
     verbose "Writing data to script file..."
+    verbose "Extra content: $4"
 
     local scriptloc="${scriptroot}/${2}"
-    echo -e "${1}${3} Script - ${2}\n${3} Purpose: XYZ\n\n`[ -n "$4" ] && echo "${4}"`" > "${scriptloc}" && write "Successfully created script at ${scriptloc}!" || error "Failed to create script ${2} at ${scriptloc}!"
+    echo -e "${1}${3} Script - ${2}\n${3} Purpose: XYZ\n\n`[ -n "$4" ] && echo ${4}`" > "${scriptloc}" && write "Successfully created script at ${scriptloc}!" || error "Failed to create script ${2} at ${scriptloc}!"
 
     # Set the current working script (__cws) to the newly created script
     __cws="$2"
@@ -264,14 +278,13 @@ __create() {
     [[ "$1" =~ ^(-e|--env|env)$ ]] && env=true && shift && envpath="$1" && shift
     local name="$1"
     
-    # Check that the arg isn't a command
-    # verbose `isCmd "$name"`
-    verbose "Script name: $name"
+    verbose "Script name: ${name%.***}"
 
     # Check for conflict of name
-    if [ -e "$scriptroot/$name" ]; then
-      read -p "The script $name already exists! Did you want to overwrite? [Y\n] " yn
-      [[ "${yn,,}" =~ "y" ]] && proctype "$name" || echo "Keeping original script '$name'"
+    if [ -e "$scriptroot/${name%.***}" ]; then
+      echo -n "The script ${name%.***} already exists! Did you want to overwrite? [Y\n] "
+      read yn
+      [[ "${yn,,}" =~ "y" ]] && proctype "$name" || echo "Keeping original script '${name%.***}'"
     else
       proctype "$name"
     fi
