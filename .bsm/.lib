@@ -228,6 +228,14 @@ __create() {
     # Python
     elif [[ "$name" =~ ".py" ]]; then
       if [[ $env ]]; then
+        if [[ `command -v vem` ]]; then
+          local vemenv=`vem py list | grep "$envpath"`
+          [[ -z $vemenv ]] && error "No VEM env with name $envpath!" && exit
+          envpath=$(vem py --path "$vemenv")
+        else
+          # Assume path, bail upon no path
+          [[ ! "$envpath" =~ '/' ]] && error "VEM must be installed to use names!\nIf this is a path, please prepend it with './' or use the absolute path!" && exit
+        fi
         if [[ ! -e "$envpath" ]]; then
           error "Environment path doesn't exist!"
           error "$envpath"
