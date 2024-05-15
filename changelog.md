@@ -1,16 +1,17 @@
 # BSM Changelog
 
-# What's New (v3.0.0)
+# What's New (v3.1.1)
 - Made some under-the-hood changes
 - Port to new application style
 - Removed various unnecessary or unready functions
 - Refined program size
 - Default script type settings
 - Color output
+- Virtual Environment support for Python and Node
+- Support for VEM (Virtual Environment Manager) users (Input name instead of path)
 
-# What's Next (v3.1.1)
-- [DONE] Support to create Python scripts that point to a specific virtual environment
-- Support to create node apps that reference outside packages (Node Packaged Environments - like VEM)
+# What's Next (v3.2.0)
+- System-wide install option alongside default user-based install
 
 # Bugs
 ## Key:
@@ -23,5 +24,4 @@
         - Functions as expected now!
 
 - BB000001 [R]: Autoupdate will cause issues by executing updated and old code while the new files get copied (race condition)
-    - Turn off autoupdate until a better solution can be found
-    - Problem only occurs every once in a while or when a specific command is run, generally ok to keep AU enabled
+        - Functions as expected (errors arise when terminal itself is confused in general)

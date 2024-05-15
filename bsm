@@ -27,7 +27,7 @@ fi
 __bsm() {
   # Go interactive if no arguments or commands are passed
   if [ -z "$1" ]; then
-    __args -i
+    __args --interactive
   else
     if [[ "$1" =~ "-" ]]; then
       # Arg mode

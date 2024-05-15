@@ -61,7 +61,7 @@ __args() {
       -l | --list )
         __list
         ;;
-      -i | --interactive )
+      --interactive )
         __sh
         exit;;
       -V | --verbose )
