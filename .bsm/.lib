@@ -9,7 +9,7 @@ prgroot="$HOME/.bsm"
 scriptroot="$HOME/scripts"
 declare -A lists
 lists[cmds]="^(create|open|rename|remove|config|sh|shell|list|version|help|update|reset|uninstall|getdeps)$"
-lists[cfg_type]="bash python node ruby lisp perl"
+lists[cfg_type]="^(bash|python|node|ruby|lisp|perl)$"
 
 # Output functions
 error() { echo -e "\e[31m[ERROR]\e[0m $1" >&2; }
@@ -343,8 +343,14 @@ __rename() {
 
 # Variable arg style: rule rule=value
 __config() {
+  # Inner write function
+  rwrite() {
+    verbose "Setting rule from $oldvalue to $newvalue"
+    sed -i -e "s/$rule=$oldvalue/$rule=$newvalue/" $cfg
+    write "Updated rule $rule from $oldvalue to $newvalue!"
+  }
   local cfg="$prgroot/.cfg"
-  until [[ $1 =~ '-' || $1 == "" || "$1" =~ ${lists[cmds]} ]]; do
+  until [[ $1 =~ '-' || $1 == "" || "$1" =~ ${lists[cmds]/\|list/} ]]; do
     if [[ $1 =~ '=' ]]; then
       local rule="`echo "$1" | cut -d '=' -f1`"
       local oldvalue="`cat $cfg | grep "$rule" | cut -d '=' -f2`"
@@ -352,30 +358,23 @@ __config() {
       # Check value lists for specific settings
       case "$rule" in
         autoupdate ) # Bool rules
-          if [[ ! "$newvalue" =~ ^(true|false)$ ]]; then
+          if [[ ! "${newvalue,,}" =~ ^(true|false)$ ]]; then
             error "Value must be a boolean!"
             exit
           else
-            verbose "Setting rule from $oldvalue to $newvalue"
-            sed -i -e "s/$rule=$oldvalue/$rule=$newvalue/" $cfg
-            write "Updated rule $rule from $oldvalue to $newvalue!"
+            rwrite
           fi
           ;;
         defaulttype ) # Type rules
-          local types=("${lists[cfg_type]}")
-          for type in $types; do
-            if [[ "$type" == "$newvalue" ]]; then
-              verbose "Setting rule from $oldvalue to $newvalue"
-              sed -i -e "s/$rule=$oldvalue/$rule=$newvalue/" $cfg
-              write "Updated rule $rule from $oldvalue to $newvalue!"
-              break
-            fi
-          done
+          if [[ ! "${newvalue,,}" =~ ${lists[cfg_type]} ]]; then
+            error "Value must be Bash, Python, Ruby, LISP, Perl, or Node!"
+            exit
+          else
+            rwrite
+          fi
           ;;
         * ) # Any other rules
-          verbose "Setting rule from $oldvalue to $newvalue"
-          sed -i -e "s/$rule=$oldvalue/$rule=$newvalue/" $cfg
-          write "Updated rule $rule from $oldvalue to $newvalue!"
+          rwrite
           ;;
       esac
     elif [[ $1 == 'list' ]]; then

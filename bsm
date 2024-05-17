@@ -12,10 +12,10 @@ if [[ $BSM_TST ]]; then
   echo -e "[BSM] UNIT TEST MODE! READING FROM REPO!"
   source $repo/.bsm/.lib
   prgroot="$repo/.bsm"
-elif [[ $autoupdate ]]; then
+elif [[ "$autoupdate" == "true" ]]; then
   # Check for updates
   [ ! -d $HOME/.bsm ] && $repo/install
-  if [[ `diff $repo/.bsm/.lib $HOME/.bsm/.lib` || `diff $(find $HOME -type d -name bsm)/.bsm/version $HOME/.bsm/version` || `diff $repo/.bsm/help $HOME/.bsm/help` ]]; then echo "Update found!"; $repo/install; fi
+  if [[ `diff $repo/.bsm/.lib $HOME/.bsm/.lib` || `diff $(find $HOME -type d -name bsm)/.bsm/version $HOME/.bsm/version` || `diff $repo/.bsm/help $HOME/.bsm/help` || `diff $repo/bsm $HOME/bin/bsm` ]]; then echo "Update found!"; $repo/install; fi
 
   # Load lib
   source $HOME/.bsm/.lib
