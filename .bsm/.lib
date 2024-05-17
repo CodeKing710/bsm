@@ -273,7 +273,7 @@ __create() {
     verbose "Extra content: $4"
 
     local scriptloc="${scriptroot}/${2}"
-    echo -e "${1}${3} Script - ${2}\n${3} Purpose: XYZ\n\n`[ -n "$4" ] && echo ${4}`" > "${scriptloc}" && write "Successfully created script at ${scriptloc}!" || error "Failed to create script ${2} at ${scriptloc}!"
+    echo -e "${1}${3} Script - ${2}\n${3} Purpose: XYZ\n\n`[ -n "$4" ] && echo ${4}`" > "${scriptloc}" && write "Successfully created script '${2}'!" || error "Failed to create script ${2} at ${scriptloc}!"
 
     # Set the current working script (__cws) to the newly created script
     __cws="$2"
@@ -290,7 +290,7 @@ __create() {
 
     # Check for conflict of name
     if [ -e "$scriptroot/${name%.***}" ]; then
-      echo -n "The script ${name%.***} already exists! Did you want to overwrite? [Y\n] "
+      echo -en "\e[1;31m[WARNING]\e[0m The script ${name%.***} already exists! Did you want to overwrite? [Y\\\\n] "
       read yn
       [[ "${yn,,}" =~ "y" ]] && proctype "$name" || echo "Keeping original script '${name%.***}'"
     else
