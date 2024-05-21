@@ -25,3 +25,6 @@
 
 - BB000001 [R]: Autoupdate will cause issues by executing updated and old code while the new files get copied (race condition)
         - Functions as expected (errors arise when terminal itself is confused in general)
+
+- BB000002 [O]: BSM has quirky behavior in WSL (possibly Linux in general, including MacOS).
+        - Attempt POSIX compliance (replace inline param expansion substitution with 'sed' or 'tr')

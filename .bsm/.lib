@@ -263,7 +263,7 @@ __create() {
       mkfile "${envshebang}bash\n\n" "${name%.***}" "#"
     # Default script type
     else
-      mkfile "${envshebang}${defaulttype/lisp/-S sbcl --script}\n\n" "${name%.***}" "#"
+      mkfile "${envshebang}$(echo "$defaulttype" | sed -e 's;lisp;-S sbcl --script;gi;')\n\n" "${name%.***}" "#"
     fi
   }
   # Inner file generator func
