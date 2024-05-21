@@ -59,8 +59,8 @@ __args() {
         __config $@
         return;;
       -l | --list )
-        __list
-        ;;
+        shift; __list "$@"
+        return;;
       --interactive )
         __sh
         exit;;
@@ -136,8 +136,8 @@ __cmds() {
         __sh
         ;;
       list )
-        __list
-        ;;
+        shift; __list "$@"
+        return;;
       version )
         __args -v
         ;;
@@ -319,11 +319,11 @@ __remove() {
 }
 
 __list() {
-  local list=`ls -p1 $scriptroot 2>/dev/null | xargs -i echo "- {}"`
+  local list=`ls -p1 $scriptroot 2>/dev/null | xargs -i echo "{}"`
   if [[ ! -d $scriptroot || "$list" == "" ]]; then
     write "No Scripts Created Yet!"
   else
-    echo -e "Scripts:\n$list"
+    [[ "$1" =~ (-1|rows) ]] && echo -e "$list" || echo -e "$list" | column
   fi
 }
 
