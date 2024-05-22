@@ -12,6 +12,7 @@
 
 # What's Next (v3.2.0)
 - System-wide install option alongside default user-based install
+- Cross-platform compatibility
 
 # Bugs
 ## Key:
