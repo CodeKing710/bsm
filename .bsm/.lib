@@ -3,7 +3,7 @@
 # BSM's Functions and Variables
 
 # Vars
-__cwd=`pwd`
+__cwd="$(pwd)"
 __cws=""
 prgroot="$HOME/.bsm"
 scriptroot="$HOME/scripts"
@@ -12,17 +12,15 @@ lists[cmds]="^(create|open|rename|remove|config|sh|shell|list|version|help|updat
 lists[cfg_type]="^(bash|python|node|ruby|lisp|perl)$"
 
 # Output functions
-error() { echo -e "\e[31m[ERROR]\e[0m $1" >&2; }
-
-verbose() { [[ $VERBOSE ]] && echo -e "\e[32m[VERBOSE]\e[0m $1"; }
-
-write() { echo -e "\e[36m[BSM]\e[0m $1"; }
+error() { echo -e "\e[31m[ERROR]\e[0m ${1}" >&2; }
+verbose() { [[ -n "$VERBOSE" ]] && echo -e "\e[32m[VERBOSE]\e[0m ${1}"; }
+write() { echo -e "\e[36m[BSM]\e[0m ${1}"; }
 
 # Funcs
 __loadcfg() {
   local cfg="$prgroot/.cfg"
-  editor=`cat $cfg | grep 'editor' | cut -d '=' -f2`
-  defaulttype=`cat $cfg | grep 'defaulttype' | cut -d '=' -f2`
+  editor="$(cat "$cfg" | grep 'editor' | cut -d '=' -f2)"
+  defaulttype="$(cat "$cfg" | grep 'defaulttype' | cut -d '=' -f2)"
 }
 # Config vars will be set via function in-case of needing reloaded
 __loadcfg
@@ -36,27 +34,27 @@ __args() {
       -c | --create )
         shift
         [[ -z "$1" ]] && error "Missing required value: 'NAME'" && exit
-        __create $@
+        __create "$@"
         return;;
       -o | --open )
         shift
         # [[ "$1" =~ '-' || -z "$1" ]] && echo "Missing required value: 'NAME'" && exit
-        __open $1 # Can only open one file at a time so any more wouldn't make sense
+        __open "$1" # Can only open one file at a time so any more wouldn't make sense
         exit;;
       -r | --remove )
         shift
         [[ "$1" =~ '-' || -z "$1" ]] && error "Missing required value: 'NAME'" && exit
-        __remove $@
+        __remove "$@"
         return;;
       -R | --rename )
         shift
         [[ "$1" =~ '-' || -z "$1" ]] && error "Missing required value: 'REP_FRMT'" && exit
-        __rename $@
+        __rename "$@"
         return;;
       -C | --config )
         shift
         [[ "$1" =~ '-' || -z "$1" ]] && error "Missing required value: 'RULE'" && exit
-        __config $@
+        __config "$@"
         return;;
       -l | --list )
         shift; __list "$@"
@@ -68,23 +66,23 @@ __args() {
         VERBOSE=true
         ;;
       -\? | -h | --help )
-        cat $prgroot/help
+        cat "$prgroot/help"
         return;; # Because cmd mode references these options
       -v | --version )
-        cat $prgroot/version
+        cat "$prgroot/version"
         return;; # Because cmd mode references these options
       --update )
         verbose "Checking for updates..."
-        if [[ `diff $(find $HOME -type d -name bsm)/.bsm/.lib $HOME/.bsm/.lib` || `diff $(find $HOME -type d -name bsm)/.bsm/version $HOME/.bsm/version` || `diff $(find $HOME -type d -name bsm)/.bsm/help $HOME/.bsm/help` ]]; then 
+        if [[ `diff "$repo"/.bsm/.lib "$HOME"/.bsm/.lib` || `diff "$repo"/.bsm/version "$HOME"/.bsm/version` || `diff "$repo"/.bsm/help "$HOME"/.bsm/help` ]]; then 
           verbose "Updating BSM..."
-          $(find $HOME -type d -name bsm)/install && write "Successfully installed BSM!"
+          "$repo/install" && write "Successfully installed BSM!"
         else
           write "BSM up-to-date!"
         fi
         exit;;
       --reset )
         verbose "Resetting BSM to default configuration..."
-        cp -rf $(find $HOME -type d -name bsm)/.bsm $HOME && write "BSM has been reset!" || error "Failed to reset defaults!"
+        cp -rf "$repo/.bsm" "$HOME/" && write "BSM has been reset!" || error "Failed to reset defaults!"
         exit;;
       --uninstall )
         __uninstall
@@ -96,7 +94,7 @@ __args() {
         if [[ ! "$1" =~ '-' ]]; then
           __cmds "$@"
         else
-          cat $prgroot/help | head -1
+          cat "$prgroot/help" | head -1
           error "\"$1\" is not an argument!"
           exit
         fi
@@ -111,26 +109,26 @@ __cmds() {
       create )
         shift
         [[ -z "$1" ]] && error "Missing required value: 'NAME'" && exit
-        __create $@
+        __create "$@"
         return;;
       open )
         shift
-        __open $1
+        __open "$1"
         return;;
       rename )
         shift
         [[ "$1" =~ '-' || -z "$1" ]] && error "Missing required value: 'REP_FRMT'" && exit
-        __rename $@
+        __rename "$@"
         return;;
       rm | remove )
         shift
         [[ "$1" =~ '-' || -z "$1" ]] && error "Missing required value: 'NAME'" && exit
-        __remove $@
+        __remove "$@"
         return;;
       cfg | config )
         shift
         [[ "$1" =~ '-' || -z "$1" ]] && error "Missing required value: 'RULE'" && exit
-        __config $@
+        __config "$@"
         return;;
       sh | shell )
         __sh
@@ -160,7 +158,7 @@ __cmds() {
         if [[ "$1" =~ '-' ]]; then
           __args "$@"
         else
-          cat $prgroot/help | head -1
+          cat "$prgroot/help" | head -1
           error "\"$1\" is not an command!"
           exit
         fi
@@ -186,7 +184,7 @@ __sh() {
 
 __create() {
   # Check that the scripts folder was made
-  [ ! -d $scriptroot ] && mkdir $scriptroot
+  [[ ! -e "$scriptroot" ]] && mkdir "$scriptroot"
 
   # Check if venv location is supplied
   local envshebang="#!/bin/env "
@@ -198,16 +196,16 @@ __create() {
     local name="$1"
     # Node
     if [[ "$name" =~ ".js" ]]; then
-      if [[ $env ]]; then
+      if [[ -n "$env" ]]; then
         # [[ ! `command -v vem` ]] && echo -e "Must install Virtual Environment Manager to take advantage of Node Virtual Environments!\nRun \`git clone https://github.com/CodeKing710/vem; vem/install;\` to download and install VEM!" && exit
         # VEM is optional to be able to manage your envs
         # To allow reference, use the path to THE PARENT FOLDER of the node_modules folder that has the desired packages
         # If VEM is installed, it will list your envs and check if the name exists then use that path
         # Paths detected by the '/' that exists in each path
-        if [[ `command -v vem` ]]; then
-          local vemenv=`vem js list | grep "$envpath"`
-          [[ -z $vemenv ]] && error "No VEM env with name $envpath!" && exit
-          envpath=$(vem js --path "$vemenv")
+        if [[ $(command -v vem) ]]; then
+          local vemenv="$(vem js list | grep "$envpath")"
+          [[ -z "$vemenv" ]] && error "No VEM env with name $envpath!" && exit
+          envpath="$vemenv"
         else
           # Assume path, bail upon no path
           [[ ! "$envpath" =~ '/' ]] && error "VEM must be installed to use names!\nIf this is a path, please prepend it with './' or use the absolute path!" && exit
@@ -227,11 +225,12 @@ __create() {
       fi
     # Python
     elif [[ "$name" =~ ".py" ]]; then
-      if [[ $env ]]; then
-        if [[ `command -v vem` ]]; then
-          local vemenv=`vem py list | grep "$envpath"`
-          [[ -z $vemenv ]] && error "No VEM env with name $envpath!" && exit
-          envpath=$(vem py --path "$vemenv")
+      if [[ -n "$env" ]]; then
+        if [[ $(command -v vem) ]]; then
+          local vemenv="$(vem py list | grep "$envpath")"
+          [[ -e "$vemenv/bin" ]] && vemenv="$vemenv/bin" || vemenv="$vemenv/Scripts"
+          [[ -z "$vemenv" ]] && error "No VEM env with name $envpath!" && exit
+          envpath="$vemenv"
         else
           # Assume path, bail upon no path
           [[ ! "$envpath" =~ '/' ]] && error "VEM must be installed to use names!\nIf this is a path, please prepend it with './' or use the absolute path!" && exit
@@ -298,47 +297,47 @@ __create() {
     fi
     env=""
     envpath=""
-  shift; done; [ -n "$@" ] && __args "$@"
+  shift; done; [[ -n "$@" ]] && __args "$@"
 }
 
 __open() {
-  if [ -n "$1" ]; then # Arg passed
-    __cws=$1 # Set
-  elif [ -z "$__cws" -a -n "$1" ]; then
+  if [[ -n "$1" ]]; then # Arg passed
+    __cws="$1" # Set
+  elif [[ -z "$__cws" && -n "$1" ]]; then
     __cws="$1"
   fi
 
-  [ -n "$__cws" ] && $editor $scriptroot/$__cws || error "No file to open!"
+  [[ -n "$__cws" ]] && $editor "$scriptroot/$__cws" || error "No file to open!"
 }
 
 __remove() {
-  until [[ $1 =~ '-' || $1 == "" || "$1" =~ ${lists[cmds]} ]]; do
-    local name=$1
-    rm $scriptroot/$name 2>/dev/null && write "Successfully removed script '$name'" || error "Unable to remove script '$name'"
-  shift; done; [ -n "$@" ] && __args $@
+  until [[ "$1" =~ '-' || "$1" == "" || "$1" =~ ${lists[cmds]} ]]; do
+    local name="$1"
+    rm "$scriptroot/$name" 2>/dev/null && write "Successfully removed script '$name'" || error "Unable to remove script '$name'"
+  shift; done; [[ -n "$@" ]] && __args "$@"
 }
 
 __list() {
-  local list=`ls -p1 $scriptroot 2>/dev/null | xargs -i echo "{}"`
-  if [[ ! -d $scriptroot || "$list" == "" ]]; then
+  local list=`ls -p1 "$scriptroot" 2>/dev/null | xargs -i echo "{}"`
+  if [[ ! -e "$scriptroot" || "$list" == "" ]]; then
     write "No Scripts Created Yet!"
   else
-    [[ "$1" =~ (-1|rows) ]] && echo -e "$list" || echo -e "$list" | column
+    [[ "$1" =~ ^(-1|rows)$ ]] && echo -e "$list" || echo -e "$list" | column
   fi
 }
 
 # Accepted arg style: oldname>newname
 __rename() {
-  until [[ $1 =~ '-' || $1 == "" || "$1" =~ ${lists[cmds]} ]]; do
+  until [[ "$1" =~ '-' || "$1" == "" || "$1" =~ ${lists[cmds]} ]]; do
     local old=`echo "$1" | cut -d '>' -f1`
     local new=`echo "$1" | cut -d '>' -f2`
     if [ -n "$old" -a -n "$new" ]; then
-      mv $scriptroot/$old $scriptroot/$new 2>/dev/null && write "Successfully renamed '$old' to '$new'!"
+      mv "$scriptroot/$old" "$scriptroot/$new" 2>/dev/null && write "Successfully renamed '$old' to '$new'!"
       __cws="$new"
     else
       error "Format incorrect! Format: OLD_NAME>NEW_NAME"
     fi
-  shift; done; [ -n "$@" ] && __args $@
+  shift; done; [[ -n "$@" ]] && __args "$@"
 }
 
 # Variable arg style: rule rule=value
@@ -350,10 +349,10 @@ __config() {
     write "Updated rule $rule from $oldvalue to $newvalue!"
   }
   local cfg="$prgroot/.cfg"
-  until [[ $1 =~ '-' || $1 == "" || "$1" =~ ${lists[cmds]/\|list/} ]]; do
-    if [[ $1 =~ '=' ]]; then
+  until [[ "$1" =~ '-' || "$1" == "" || "$1" =~ ${lists[cmds]/\|list/} ]]; do
+    if [[ "$1" =~ '=' ]]; then
       local rule="`echo "$1" | cut -d '=' -f1`"
-      local oldvalue="`cat $cfg | grep "$rule" | cut -d '=' -f2`"
+      local oldvalue="`cat "$cfg" | grep "$rule" | cut -d '=' -f2`"
       local newvalue="`echo "$1" | cut -d '=' -f2`"
       # Check value lists for specific settings
       case "$rule" in
@@ -377,28 +376,28 @@ __config() {
           rwrite
           ;;
       esac
-    elif [[ $1 == 'list' ]]; then
+    elif [[ "$1" == 'list' ]]; then
       echo "Current Settings:"
-      cat $cfg
+      cat "$cfg"
       return
-    elif [[ $1 == 'RESET' ]]; then
+    elif [[ "$1" == 'RESET' ]]; then
       __args --reset
     fi
-    write "Rule: `cat $cfg | grep "\b$1\b" || error "No Rule Found!"`"
-  shift; done; [ -n "$@" ] && __args $@
+    write "Rule: `cat "$cfg" | grep "\b$1\b" || error "No Rule Found!"`"
+  shift; done; [[ -n "$@" ]] && __args "$@"
 }
 
 __uninstall() {
   read -p "Are you sure you want to uninstall BSM? [Y\n] " yn
   if [[ "${yn,,}" =~ 'y' ]]; then
     write "Uninstalling BSM..."
-    rm $HOME/bin/bsm
-    rm -r $HOME/.bsm
+    rm "$HOME/bin/bsm"
+    rm -r "$HOME/.bsm"
 
     read -p "Did you want to remove the repo as well? [Y\n] " yn
     if [[ "${yn,,}" =~ 'y' ]]; then
       write "Removing repo..."
-      rm -r $repo
+      rm -r "$repo"
     else
       write "Keeping the repo"
     fi
