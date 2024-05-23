@@ -243,8 +243,9 @@ __create() {
           envshebang="#!$envpath/"
           mkfile "${envshebang}python\n\n" "${name%.***}" "#"
         fi
+      else
+        mkfile "${envshebang}python\n\n" "${name%.***}" "#"
       fi
-      mkfile "${envshebang}python\n\n" "${name%.***}" "#"
     # Ruby
     elif [[ "$name" =~ ".rb" ]]; then
       mkfile "${envshebang}ruby\n\n" "${name%.***}" "#"
