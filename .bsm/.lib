@@ -202,8 +202,8 @@ __create() {
         # To allow reference, use the path to THE PARENT FOLDER of the node_modules folder that has the desired packages
         # If VEM is installed, it will list your envs and check if the name exists then use that path
         # Paths detected by the '/' that exists in each path
-        if [[ $(command -v vem) ]]; then
-          local vemenv="$(vem js list | grep "$envpath")"
+        if [[ -n "$(command -v vem)" ]]; then
+          local vemenv="$(vem js --path "$envpath" 2>/dev/null)"
           [[ -z "$vemenv" ]] && error "No VEM env with name $envpath!" && exit
           envpath="$vemenv"
         else
@@ -226,8 +226,8 @@ __create() {
     # Python
     elif [[ "$name" =~ ".py" ]]; then
       if [[ -n "$env" ]]; then
-        if [[ $(command -v vem) ]]; then
-          local vemenv="$(vem py list | grep "$envpath")"
+        if [[ -n "$(command -v vem)" ]]; then
+          local vemenv="$(vem py --path "$envpath" 2>/dev/null)"
           [[ -e "$vemenv/bin" ]] && vemenv="$vemenv/bin" || vemenv="$vemenv/Scripts"
           [[ -z "$vemenv" ]] && error "No VEM env with name $envpath!" && exit
           envpath="$vemenv"
