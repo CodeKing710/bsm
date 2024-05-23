@@ -2,13 +2,13 @@
 
 # BSM's installer
 install() {
-  local repo=$(find $HOME -type d -name bsm)
-  cp -f $repo/bsm $HOME/bin || return false
-  cp -f $repo/.bsm/.lib $HOME/.bsm || return false
-  cp -f $repo/.bsm/help $HOME/.bsm || return false
-  cp -f $repo/.bsm/version $HOME/.bsm || return false
-  [[ ! `cat $HOME/.bashrc` =~ "# BSM PATH ADD" ]] && ( echo -e "# BSM PATH ADD\nexport PATH=\"\$HOME/scripts:\$PATH\"" >> $HOME/.bashrc || return false )
+  local repo=$(find "$HOME" -type d -name bsm 2>/dev/null | head -1)
+  cp -f "$repo"/bsm "$HOME"/bin/bsm || return 1
+  cp -f "$repo"/.bsm/.lib "$HOME"/.bsm/.lib || return 1
+  cp -f "$repo"/.bsm/help "$HOME"/.bsm/help || return 1
+  cp -f "$repo"/.bsm/version "$HOME"/.bsm/version || return 1
+  [[ ! $(cat "$HOME"/.bashrc) =~ "# BSM PATH ADD" ]] && ( echo -e "# BSM PATH ADD\nexport PATH=\"\$HOME/scripts:\$PATH\"" >> "$HOME"/.bashrc || return 1 )
   echo "BSM installed!"
 }
 
-install || echo "Install failed!"
+install
