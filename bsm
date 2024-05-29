@@ -15,10 +15,10 @@ if [[ -n "$BSM_TST" ]]; then
 elif [[ "$autoupdate" == "true" ]]; then
   # Check for updates
   if [[ ! -d "$HOME/.bsm" \
-  || `diff "$repo"/.bsm/.lib "$HOME"/.bsm/.lib` \
-  || `diff "$repo"/.bsm/version "$HOME"/.bsm/version` \
-  || `diff "$repo"/.bsm/help "$HOME"/.bsm/help` \
-  || `diff "$repo"/bsm "$HOME"/bin/bsm` ]]; then echo "Update found!"; "$repo/install"; fi
+  || $(diff "$repo"/.bsm/.lib "$HOME"/.bsm/.lib) \
+  || $(diff "$repo"/.bsm/version "$HOME"/.bsm/version) \
+  || $(diff "$repo"/.bsm/help "$HOME"/.bsm/help) \
+  || $(diff "$repo"/bsm "$HOME"/bin/bsm) ]]; then echo "Update found!"; "$repo/install"; fi
 
   # Load lib
   source "$HOME/.bsm/.lib"
