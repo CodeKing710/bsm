@@ -28,4 +28,5 @@
         - Functions as expected (errors arise when terminal itself is confused in general)
 
 - BB000002 [O]: BSM has quirky behavior in WSL (possibly Linux in general, including MacOS).
-        - Attempt POSIX compliance (replace inline param expansion substitution with 'sed' or 'tr') [TESTING]
+        - Attempt POSIX compliance (replace inline param expansion substitution with 'sed' or 'tr') [DONE]
+        - POSIX Compliance fixed various flavors of Linux and MacOS (aka zsh), WSL mysteriously only works for certain apps (possible subshell issue?)
