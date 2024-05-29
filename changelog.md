@@ -9,10 +9,10 @@
 - Color output
 - Virtual Environment support for Python and Node
 - Support for VEM (Virtual Environment Manager) users (Input name instead of path)
+- Cross-platform compatibility
 
 # What's Next (v3.2.0)
 - System-wide install option alongside default user-based install
-- [DONE] Cross-platform compatibility
 
 # Bugs
 ## Key:

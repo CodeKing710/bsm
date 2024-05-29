@@ -2,8 +2,10 @@ Usage: bsm [OPTIONS] ...
 
 Options:
     -c | --create <NAME> [...]
-	    Add new script(s) to your personal scripts. Specify a file extension to use a specific scripting language. Bash is default and doesn't require a file extension. You may also specify the script type by following this argument with '-p', '-n', '-r', or '-l'. Please note that even though those arguments exist outside '-c', using them here changes their meaning.
-	    Available: .js (-n), .py (-p), .rb (-r), .cl (-l), .pl (-e), .ps1 (-P)
+	    Add new script(s) to your personal scripts. Specify a file extension to use a specific scripting language. Bash is default and doesn't require a file extension. This behavior can be configured via the 'defaulttype' rule.
+	    Available: .js, .py, .rb, .cl, .pl, .ps1
+
+        Create can utilize virtual environments to piggyback your script off of. Generally only Python has virtual environments, but BSM has a work around for NodeJS scripts. To utilize a virtual environment, use `-e` or `--env` and then specify the path to the virtual environment's executables. BSM will automatically check if it exists and bail out upon not finding it. VEM integration exists to make for path finding much simpler. Just specify the name of the venv you want to choose and let BSM handle the rest. This must come before the name since it is specifying the venv for that specific script. Please note, THIS IS NOT PERFECT! Some code may need rewritten based on the platform of choice or even the flavor of Node or Python you choose to work with!
 
     -l | --list
 	    Show list of available personal scripts
@@ -16,26 +18,40 @@ Options:
         to create or rename. i.e. bsm --create script --open
 
     -r | --remove <NAME> [...]
-	    Remove script(s) from personal scripts (DOES NOT TOUCH SYSTEM EXECUTABLES)
+	    Remove script(s) from BSM
 
     -n | --rename <SCRIPT> <NEW_NAME> [...]
         Renames scripts
 
     -C | --config <RULE> [VALUE] [...]
-        Gets or sets BSM configuration rule. Chain multiple together to get or set multiple rules
+        Gets or sets BSM configuration rule. Chain multiple together to get or set multiple rules.
+        Current rules:
+        - defaulttype: Set default scripting language for new scripts.
+        - editor: Set default editor for opening scripts.
+        - autoupdate: Enable/disable autoupdates.
 
     -v | --version
-        Show version
+        Show version and exit
 
     -h | --help
-        Show this screen
+        Show this screen and exit
 
 Special Options:
     --update
         Force updates BSM (Only really necessary if you turned off auto-updates)
 
-    --reset
-        Reset BSM configuration to defaults
+    --reset-cfg
+        Reset BSM configuration to defaults. Can also be done via `bsm config RESET`
+
+    --dependencies
+        Reinstalls all of the BSM internal and external dependencies
+    
+    --interactive
+        This is what BSM does by default when no arguments are passed, but can be forced into interactive via this flag
+    
+    --uninstall
+        Uninstall BSM from the specified location. Default is remove for the current user
+    
 
 For more information and available commands, visit https://github.com/CodeKing710/bsm#readme.
 Man page in progress
