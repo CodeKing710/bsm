@@ -46,7 +46,7 @@ __args() {
         [[ "$1" =~ '-' || -z "$1" ]] && error "Missing required value: 'NAME'" && exit
         __remove "$@"
         return;;
-      -R | --rename )
+      -n | --rename )
         shift
         [[ "$1" =~ '-' || -z "$1" ]] && error "Missing required value: 'REP_FRMT'" && exit
         __rename "$@"
@@ -56,13 +56,13 @@ __args() {
         [[ "$1" =~ '-' || -z "$1" ]] && error "Missing required value: 'RULE'" && exit
         __config "$@"
         return;;
-      -l | --list )
+      -*l* | --list )
         shift; __list "$@"
         return;;
       --interactive )
         __sh
         exit;;
-      -V | --verbose )
+      -*V* | --verbose )
         VERBOSE=true
         ;;
       -\? | -h | --help )
