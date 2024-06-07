@@ -3,7 +3,7 @@
 # BSM's installer
 install() {
   local repo=$(find "$HOME" -type d -name bsm 2>/dev/null | head -1)
-  cp -f "$repo"/bsm "$HOME"/bin/bsm || return 1
+  [[ "$1" == "--sys" ]] && { sudo cp -f "$repo/bsm" "/usr/local/bin/bsm"; return 1; } || { cp -f "$repo"/bsm "$HOME"/bin/bsm || return 1; }
   [[ ! -e "$HOME/.bsm" ]] && mkdir "$HOME/.bsm"
   [[ ! -e "$HOME/.bsm/.cfg" ]] && cp -f "$repo"/.bsm/.cfg "$HOME/.bsm/.cfg"
   cp -f "$repo"/.bsm/.lib "$HOME"/.bsm/.lib || return 1

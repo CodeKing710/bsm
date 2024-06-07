@@ -72,13 +72,7 @@ __args() {
         cat "$prgroot/version"
         return;; # Because cmd mode references these options
       --update )
-        verbose "Checking for updates..."
-        if [[ `diff "$repo"/.bsm/.lib "$HOME"/.bsm/.lib` || `diff "$repo"/.bsm/version "$HOME"/.bsm/version` || `diff "$repo"/.bsm/help "$HOME"/.bsm/help` ]]; then 
-          verbose "Updating BSM..."
-          "$repo/install" && write "Successfully installed BSM!"
-        else
-          write "BSM up-to-date!"
-        fi
+        __update
         exit;;
       --reset )
         verbose "Resetting BSM to default configuration..."
@@ -143,7 +137,7 @@ __cmds() {
         __args -h
         ;;
       update )
-        __args --update
+        __update
         ;;
       reset )
         __args --reset
@@ -415,4 +409,14 @@ __getdeps() {
   sudo apt-get install python
   sudo apt-get install ruby
   sudo apt-get install sbcl
+}
+
+__update() {
+  verbose "Checking for updates..."
+  if [[ `diff "$repo"/.bsm/.lib "$HOME"/.bsm/.lib` || `diff "$repo"/.bsm/version "$HOME"/.bsm/version` || `diff "$repo"/.bsm/help "$HOME"/.bsm/help` ]]; then 
+    verbose "Updating BSM..."
+    "$repo/install" && write "Successfully installed BSM!"
+  else
+    write "BSM up-to-date!"
+  fi
 }

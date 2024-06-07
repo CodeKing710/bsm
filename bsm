@@ -3,8 +3,9 @@
 # BSM's main code
 
 # Set some configs prior to loading
-autoupdate=$(cat "$HOME"/.bsm/.cfg | grep 'autoupdate' | cut -d '=' -f2)
-repo=$(find "$HOME" -type d -name bsm 2>/dev/null | head -1)
+autoupdate="$(cat "$HOME"/.bsm/.cfg | grep 'autoupdate' | cut -d '=' -f2)"
+repo="$(find "$HOME" -type d -name bsm 2>/dev/null | head -1)"
+[[ ! -e "$HOME/.bsm" ]] && "$repo/install"
 
 # Check for unit test
 if [[ -n "$BSM_TST" ]]; then
@@ -14,11 +15,17 @@ if [[ -n "$BSM_TST" ]]; then
   prgroot="$repo/.bsm"
 elif [[ "$autoupdate" == "true" ]]; then
   # Check for updates
-  if [[ ! -e "$HOME/.bsm" \
-  || -n "$(diff "$repo"/.bsm/.lib "$HOME"/.bsm/.lib)" \
-  || -n "$(diff "$repo"/.bsm/version "$HOME"/.bsm/version)" \
-  || -n "$(diff "$repo"/.bsm/help "$HOME"/.bsm/help)" \
-  || -n "$(diff "$repo"/bsm "$HOME"/bin/bsm)" ]]; then echo "Update found!"; "$repo/install"; fi
+  if [[ -z "$([[ -e /usr/local/bin ]] && find /usr/local/bin -type f -name clapp)" ]]; then
+    if [[ -n "$(diff "$repo"/.bsm/.lib "$HOME"/.bsm/.lib)" \
+    || -n "$(diff "$repo"/.bsm/version "$HOME"/.bsm/version)" \
+    || -n "$(diff "$repo"/.bsm/help "$HOME"/.bsm/help)" \
+    || -n "$(diff "$repo"/bsm "$HOME"/bin/bsm)" ]]; then "$repo/install"; fi
+  else
+    if [[ -n "$(diff "$repo"/.bsm/.lib "$HOME"/.bsm/.lib)" \
+    || -n "$(diff "$repo"/.bsm/version "$HOME"/.bsm/version)" \
+    || -n "$(diff "$repo"/.bsm/help "$HOME"/.bsm/help)" \
+    || -n "$(diff "$repo"/bsm /usr/local/bin/bsm)" ]]; then "$repo/install" --sys; fi
+  fi
 
   # Load lib
   source "$HOME/.bsm/.lib"
