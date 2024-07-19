@@ -1,0 +1,11 @@
+              Welcome to BSM Shell!
+
+            To leave the shell, enter
+                    `exit`
+                      or
+                    `quit`!
+        To pass bash commands to this shell run
+                    `pass`
+      with the desired command(s) supplied after!
+        To hide this message upon usage, run
+            `shopt hush_login=true`
