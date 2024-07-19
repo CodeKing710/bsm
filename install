@@ -6,10 +6,12 @@ install() {
   [[ "$1" == "--sys" ]] && { sudo cp -f "$repo/bsm" "/usr/local/bin/bsm" || return 1; } || { cp -f "$repo"/bsm "$HOME"/bin/bsm || return 1; }
   [[ ! -e "$HOME/.bsm" ]] && mkdir "$HOME/.bsm"
   [[ ! -e "$HOME/.bsm/.cfg" ]] && cp -f "$repo"/.bsm/.cfg "$HOME/.bsm/.cfg"
+  [[ ! -e "$HOME/.bsm/sh.cfg" ]] && cp -f "$repo"/.bsm/sh.cfg "$HOME/.bsm/sh.cfg"
+  cp -f "$repo/.bsm/motd.txt" "$HOME/.bsm/motd.txt" || return 1
   cp -f "$repo"/.bsm/.lib "$HOME"/.bsm/.lib || return 1
   cp -f "$repo"/.bsm/help "$HOME"/.bsm/help || return 1
   cp -f "$repo"/.bsm/version "$HOME"/.bsm/version || return 1
-  [[ ! "$(cat "$HOME"/.bashrc)" =~ "# BSM PATH ADD" ]] && ( echo -e "# BSM PATH ADD\nexport PATH=\"\$HOME/scripts:\$PATH\"" >> "$HOME"/.bashrc || return 1 )
+  [[ ! "$(cat "$HOME"/.bashrc)" =~ "# BSM PATH ADD" ]] && { echo -e "# BSM PATH ADD\nexport PATH=\"\$HOME/scripts:\$PATH\"" >> "$HOME"/.bashrc || return 1; }
   echo "BSM installed!"
 }
 

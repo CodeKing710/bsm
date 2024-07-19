@@ -1,11 +1,17 @@
 #!/bin/bash
 
-# BSM's main code
+# Check for parent shell so we don't set any options inadvertently
+[[ ! "$$" -eq "$BASHPID" ]] && {
+  shopt -q -s extglob
+  set -o emacs
+}
 
 # Set some configs prior to loading
 autoupdate="$(cat "$HOME"/.bsm/.cfg | grep 'autoupdate' | cut -d '=' -f2)"
 repo="$(find "$HOME" -type d -name bsm 2>/dev/null | head -1)"
 [[ ! -e "$HOME/.bsm" ]] && "$repo/install"
+
+# BSM's main code
 
 # Check for unit test
 if [[ -n "$BSM_TST" ]]; then
@@ -18,11 +24,13 @@ elif [[ "$autoupdate" == "true" ]]; then
   if [[ -z "$([[ -e /usr/local/bin ]] && find /usr/local/bin -type f -name clapp)" ]]; then
     if [[ -n "$(diff "$repo"/.bsm/.lib "$HOME"/.bsm/.lib)" \
     || -n "$(diff "$repo"/.bsm/version "$HOME"/.bsm/version)" \
+    || -n "$(diff "$repo"/.bsm/motd.txt "$HOME"/.bsm/motd.txt)" \
     || -n "$(diff "$repo"/.bsm/help "$HOME"/.bsm/help)" \
     || -n "$(diff "$repo"/bsm "$HOME"/bin/bsm)" ]]; then "$repo/install"; fi
   else
     if [[ -n "$(diff "$repo"/.bsm/.lib "$HOME"/.bsm/.lib)" \
     || -n "$(diff "$repo"/.bsm/version "$HOME"/.bsm/version)" \
+    || -n "$(diff "$repo"/.bsm/motd.txt "$HOME"/.bsm/motd.txt)" \
     || -n "$(diff "$repo"/.bsm/help "$HOME"/.bsm/help)" \
     || -n "$(diff "$repo"/bsm /usr/local/bin/bsm)" ]]; then "$repo/install" --sys; fi
   fi
@@ -52,4 +60,4 @@ __bsm() {
 __bsm "$@"
 
 # Cleanup for accidental sourcing
-[ "$$" -eq "$BASHPID" ] && unset __bsm __args __sh __cmds __create __open __remove __rename __config __list __cwd __cws prgroot scriptroot editor autoupdate defaulttype repo lists write error verbose
+[ "$$" -eq "$BASHPID" ] && { unset __bsm __args __sh __cmds __create __open __remove __rename __config __list __cwd __cws prgroot scriptroot editor autoupdate defaulttype repo lists write error verbose; }
