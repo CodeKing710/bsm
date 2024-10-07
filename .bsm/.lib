@@ -43,17 +43,17 @@ __args() {
         exit;;
       -r | --remove )
         shift
-        [[ "$1" =~ '-' || -z "$1" ]] && error "Missing required value: 'NAME'" && exit
+        [[ "$1" =~ ^- || -z "$1" ]] && error "Missing required value: 'NAME'" && exit
         __remove "$@"
         return;;
       -n | --rename )
         shift
-        [[ "$1" =~ '-' || -z "$1" ]] && error "Missing required value: 'REP_FRMT'" && exit
+        [[ "$1" =~ ^- || -z "$1" ]] && error "Missing required value: 'REP_FRMT'" && exit
         __rename "$@"
         return;;
       -C | --config )
         shift
-        [[ "$1" =~ '-' || -z "$1" ]] && error "Missing required value: 'RULE'" && exit
+        [[ "$1" =~ ^- || -z "$1" ]] && error "Missing required value: 'RULE'" && exit
         __config "$@"
         return;;
       -*l* | --list )
@@ -116,17 +116,17 @@ __cmds() {
         return;;
       rename )
         shift
-        [[ "$1" =~ '-' || "$1" =~ ${lists[cmds]} || -z "$1" ]] && { error "Missing required value: 'OLD_NAME'"; return; }
+        [[ "$1" =~ ^- || "$1" =~ ${lists[cmds]} || -z "$1" ]] && { error "Missing required value: 'OLD_NAME'"; return; }
         __rename "$@"
         return;;
       rm | remove )
         shift
-        [[ "$1" =~ '-' || "$1" =~ ${lists[cmds]} || -z "$1" ]] && { error "Missing required value: 'NAME'"; return; }
+        [[ "$1" =~ ^- || "$1" =~ ${lists[cmds]} || -z "$1" ]] && { error "Missing required value: 'NAME'"; return; }
         __remove "$@"
         return;;
       cfg | config )
         shift
-        [[ "$1" =~ '-' || "$1" =~ ${lists[cmds]} || -z "$1" ]] && { error "Missing required value: 'RULE'"; return; }
+        [[ "$1" =~ ^- || "$1" =~ ${lists[cmds]} || -z "$1" ]] && { error "Missing required value: 'RULE'"; return; }
         __config "$@"
         return;;
       sh | shell )
@@ -331,7 +331,7 @@ __create() {
   # Finishing the loop will hand back the arg list
   # This behavior is only necessity for args that accept
   # unlimited values that are then followed by more args
-  until [[ "$1" =~ '-' || -z "$1" || "$1" =~ ${lists[cmds]} ]]; do
+  until [[ "$1" =~ ^- || -z "$1" || "$1" =~ ${lists[cmds]} ]]; do
     [[ "$1" =~ ^(-e|--env|env)$ ]] && env=true && shift && envpath="$1" && shift
     local name="$1"
     
@@ -362,7 +362,7 @@ __open() {
 
 __remove() {
   # Loop until an arg is seen
-  until [[ "$1" =~ '-' || "$1" == "" || "$1" =~ ${lists[cmds]} ]]; do
+  until [[ "$1" =~ ^- || "$1" == "" || "$1" =~ ${lists[cmds]} ]]; do
     local name="$1"
     rm "$scriptroot/$name" 2>/dev/null && write "Successfully removed script '$name'" || error "Unable to remove script '$name'"
   shift; done; [[ -n "$@" ]] && __args "$@"
@@ -380,7 +380,7 @@ __list() {
 # Accepted arg style: oldname>newname
 __rename() {
   # Loop until arg or cmd is seen
-  until [[ "$1" =~ '-' || "$1" == "" || "$1" =~ ${lists[cmds]} ]]; do
+  until [[ "$1" =~ ^- || "$1" == "" || "$1" =~ ${lists[cmds]} ]]; do
     local old=`echo "$1" | cut -d '>' -f1`
     local new=`echo "$1" | cut -d '>' -f2`
     if [ -n "$old" -a -n "$new" ]; then
@@ -401,7 +401,7 @@ __config() {
     write "Updated rule $rule from $oldvalue to $newvalue!"
   }
   local cfg="$prgroot/.cfg"
-  until [[ "$1" =~ '-' || "$1" == "" || "$1" =~ ${lists[cmds]/\|list/} ]]; do
+  until [[ "$1" =~ ^- || "$1" == "" || "$1" =~ ${lists[cmds]/\|list/} ]]; do
     if [[ "$1" =~ '=' ]]; then
       local rule="${1%%=*}"
       local oldvalue="$(cat "$cfg" | grep "$rule" | cut -d= -f2)"
