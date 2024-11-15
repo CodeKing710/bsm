@@ -1,0 +1,41 @@
+#!/bin/bash
+
+## BSM Auto-complete file ##
+_bsm_completions() {
+  local cur="${COMP_WORDS[COMP_CWORD]}"
+  local prev="${COMP_WORDS[COMP_CWORD-1]}"
+  local COMMANDS="create open rename rm remove list cfg config version help verbose sh shell shopt update reset uninstall getdeps"
+  local ARGS="-c -o -n -r -l -C -v -h -? -V"
+  local LONGARGS="--create --open --rename --remove --list --config --version --help --verbose --update --interactive --reset-cfg --reset-shcfg --uninstall --dependencies"
+  local CONFIGOPTS="list RESET autoupdate defaulttype editor"
+  local TYPES="bash python node ruby lisp perl"
+
+  if [[ "$cur" == -* ]]; then
+    COMPREPLY=( $(compgen -W "$ARGS $LONGARGS" -- "$cur") )
+    return 0
+  fi
+
+
+  case "${prev}" in
+    bsm )
+      COMPREPLY=( $(compgen -W "${COMMANDS}" -- "$cur") )
+      return 0;;
+    -o | --open | open | -n | --rename | rename | -r | --remove | rm | remove )
+      COMPREPLY=( $(compgen -W "$(ls $HOME/scripts | sed -e 's/*//')" -- "$cur") )
+      return 0;;
+    -C | --config | cfg | config )
+      COMPREPLY=( $(compgen -W "$CONFIGOPTS" -- "$cur") )
+      return 0;;
+    autoupdate )
+      COMPREPLY=( $(compgen -W "true false" -- "$cur") )
+      return 0;;
+    defaulttype )
+      COMPREPLY=( $(compgen -W "$TYPES" -- "$cur") )
+      return 0;;
+    * )
+      COMPREPLY=()
+      ;;
+  esac
+}
+
+complete -F _bsm_completions bsm

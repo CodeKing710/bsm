@@ -23,7 +23,7 @@ Options:
     -n | --rename <SCRIPT> <NEW_NAME> [...]
         Renames scripts
 
-    -C | --config <RULE> [VALUE] [...]
+    -C | --config <RULE[=NEW_VALUE]> [...]
         Gets or sets BSM configuration rule. Chain multiple together to get or set multiple rules.
         Current rules:
         - defaulttype: Set default scripting language for new scripts.

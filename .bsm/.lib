@@ -88,7 +88,8 @@ __args() {
       --dependencies )
         __getdeps
         exit;;
-      * ) # Catch-all
+      * )
+        # Catch-all
         if [[ ! "$1" =~ '-' ]]; then
           __cmds "$@"
         else
@@ -126,7 +127,7 @@ __cmds() {
         return;;
       cfg | config )
         shift
-        [[ "$1" =~ ^- || "$1" =~ ${lists[cmds]} || -z "$1" ]] && { error "Missing required value: 'RULE'"; return; }
+        [[ "$1" =~ ^- || "$1" =~ ${lists[cmds]/list/} || -z "$1" ]] && { error "Missing required value: 'RULE'"; return; }
         __config "$@"
         return;;
       sh | shell )
