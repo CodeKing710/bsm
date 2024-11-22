@@ -10,7 +10,7 @@
 - Virtual Environment support for Python and Node
 - Support for VEM (Virtual Environment Manager) users (Input name instead of path)
 - Cross-platform compatibility
-- System-wide install option alongside default user-based install
+- [REMOVED] System-wide install option alongside default user-based install
 
 # What's Next (v3.3.0)
 

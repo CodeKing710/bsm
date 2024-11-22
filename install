@@ -3,7 +3,7 @@
 # BSM's installer
 install() {
   local repo="$(find "$HOME" -type d -name bsm 2>/dev/null | head -1)"
-  [[ "$1" == "--sys" ]] && { sudo cp -f "$repo/bsm" "/usr/local/bin/bsm" || return 1; } || { cp -f "$repo"/bsm "$HOME"/bin/bsm || return 1; }
+  cp -f "$repo"/bsm "$HOME"/bin/bsm || return 1
   [[ ! -e "$HOME/.bsm" ]] && mkdir "$HOME/.bsm"
   [[ ! -e "$HOME/.bsm/.cfg" ]] && cp -f "$repo"/.bsm/.cfg "$HOME/.bsm/.cfg"
   [[ ! -e "$HOME/.bsm/sh.cfg" ]] && cp -f "$repo"/.bsm/sh.cfg "$HOME/.bsm/sh.cfg"
@@ -12,7 +12,7 @@ install() {
   cp -f "$repo"/.bsm/help "$HOME"/.bsm/help || return 1
   cp -f "$repo"/.bsm/version "$HOME"/.bsm/version || return 1
   # Attempt to add completion to system, otherwise default to ~/.d/.c/
-  [[ "$1" == "--sys" ]] && { [[ -e "/etc/bash_completion.d/bsm-comp.sh" ]] || cp -f "$repo/.bsm/bsm-comp" "/etc/bash_completion.d/bsm-comp.sh"; } || { [[ -e "$HOME/.d/bsm-comp" ]] || cp -f "$repo/.bsm/bsm-comp" "$HOME/.d/bsm-comp"; }
+  [[ -e "$HOME/.d/bsm-comp" ]] || cp -f "$repo/.bsm/bsm-comp" "$HOME/.d/bsm-comp"
   [[ ! "$(cat "$HOME"/.bashrc)" =~ "# BSM PATH ADD" ]] && { echo -e "# BSM PATH ADD\nexport PATH=\"\$HOME/scripts:\$PATH\"" >> "$HOME"/.bashrc || return 1; }
   echo "BSM installed!"
 }

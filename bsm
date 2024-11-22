@@ -21,20 +21,12 @@ if [[ -n "$BSM_TST" ]]; then
   prgroot="$repo/.bsm"
 elif [[ "$autoupdate" == "true" ]]; then
   # Check for updates
-  if [[ -z "$([[ -e /usr/local/bin ]] && find /usr/local/bin -type f -name clapp)" ]]; then
-    if [[ -n "$(diff "$repo"/.bsm/.lib "$HOME"/.bsm/.lib)" \
-    || -n "$(diff "$repo"/.bsm/version "$HOME"/.bsm/version)" \
-    || -n "$(diff "$repo"/.bsm/motd.txt "$HOME"/.bsm/motd.txt)" \
-    || -n "$(diff "$repo"/.bsm/help "$HOME"/.bsm/help)" \
-    || -n "$(diff "$repo"/bsm "$HOME"/bin/bsm)" \
-    || -n "$(diff "$repo"/.bsm/bsm-comp "$HOME"/.d/bsm-comp)" ]]; then "$repo/install"; fi
-  else
-    if [[ -n "$(diff "$repo"/.bsm/.lib "$HOME"/.bsm/.lib)" \
-    || -n "$(diff "$repo"/.bsm/version "$HOME"/.bsm/version)" \
-    || -n "$(diff "$repo"/.bsm/motd.txt "$HOME"/.bsm/motd.txt)" \
-    || -n "$(diff "$repo"/.bsm/help "$HOME"/.bsm/help)" \
-    || -n "$(diff "$repo"/bsm /usr/local/bin/bsm)" \
-    || -n "$(diff "$repo"/.bsm/bsm-comp "$HOME"/.d/.c/bsm-comp)" ]]; then "$repo/install" --sys; fi
+  if [[ -n "$(diff "$repo"/.bsm/.lib "$HOME"/.bsm/.lib)" \
+  || -n "$(diff "$repo"/.bsm/version "$HOME"/.bsm/version)" \
+  || -n "$(diff "$repo"/.bsm/motd.txt "$HOME"/.bsm/motd.txt)" \
+  || -n "$(diff "$repo"/.bsm/help "$HOME"/.bsm/help)" \
+  || -n "$(diff "$repo"/bsm "$HOME"/bin/bsm)" \
+  || -n "$(diff "$repo"/.bsm/bsm-comp "$HOME"/.d/bsm-comp)" ]]; then "$repo/install"; fi
   fi
 
   # Load lib
