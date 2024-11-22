@@ -27,7 +27,6 @@ elif [[ "$autoupdate" == "true" ]]; then
   || -n "$(diff "$repo"/.bsm/help "$HOME"/.bsm/help)" \
   || -n "$(diff "$repo"/bsm "$HOME"/bin/bsm)" \
   || -n "$(diff "$repo"/.bsm/bsm-comp "$HOME"/.d/bsm-comp)" ]]; then "$repo/install"; fi
-  fi
 
   # Load lib
   source "$HOME/.bsm/.lib"
