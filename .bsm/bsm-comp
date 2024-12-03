@@ -26,6 +26,9 @@ _bsm_completions() {
     -C | --config | cfg | config )
       COMPREPLY=( $(compgen -W "$CONFIGOPTS" -- "$cur") )
       return 0;;
+    -l | --list | list )
+      COMPREPLY=( $(compgen -W "rows" -- "$cur") )
+      return 0;;
     autoupdate )
       COMPREPLY=( $(compgen -W "true false" -- "$cur") )
       return 0;;
