@@ -48,7 +48,8 @@ __args() {
         return;;
       -n | --rename )
         shift
-        [[ "$1" =~ ^- || -z "$1" ]] && error "Missing required value: 'REP_FRMT'" && exit
+        [[ "$1" =~ ^- || -z "$1" ]] && error "Missing required value: 'WORKING_SCRIPT'" && exit
+        [[ "$2" =~ ^- || -z "$2" ]] && error "Missing required value: 'NEW_NAME'" && exit
         __rename "$@"
         return;;
       -C | --config )
@@ -118,6 +119,7 @@ __cmds() {
       rename )
         shift
         [[ "$1" =~ ^- || "$1" =~ ${lists[cmds]} || -z "$1" ]] && { error "Missing required value: 'OLD_NAME'"; return; }
+        [[ "$2" =~ ^- || "$2" =~ ${lists[cmds]} || -z "$2" ]] && { error "Missing required value: 'OLD_NAME'"; return; }
         __rename "$@"
         return;;
       rm | remove )
@@ -382,13 +384,14 @@ __list() {
 __rename() {
   # Loop until arg or cmd is seen
   until [[ "$1" =~ ^- || "$1" == "" || "$1" =~ ${lists[cmds]} ]]; do
-    local old=`echo "$1" | cut -d '>' -f1`
-    local new=`echo "$1" | cut -d '>' -f2`
+    local old="$1"
+    local new="$2"
+    shift # Ensure next arg in loop is not the new name
     if [ -n "$old" -a -n "$new" ]; then
       mv "$scriptroot/$old" "$scriptroot/$new" 2>/dev/null && write "Successfully renamed '$old' to '$new'!"
       __cws="$new"
     else
-      error "Format incorrect! Format: OLD_NAME>NEW_NAME"
+      error "Format incorrect! Format: OLD_NAME NEW_NAME"
     fi
   shift; done; [[ -n "$@" ]] && __args "$@"
 }
