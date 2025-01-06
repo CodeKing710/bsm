@@ -369,7 +369,7 @@ __open() {
     __cws="$1"
   fi
 
-  [[ -n "$__cws" ]] && $editor "$scriptroot/$__cws" || error "No file to open!"
+  [[ -n "$__cws" ]] && "$editor" "$scriptroot/$__cws" || error "No file to open!"
 }
 
 __remove() {
@@ -381,11 +381,11 @@ __remove() {
 }
 
 __list() {
-  local list=`ls -p1 "$scriptroot" 2>/dev/null | xargs -i echo "{}"`
+  local list="$(ls -p1 "$scriptroot" 2>/dev/null)"
   if [[ ! -e "$scriptroot" || "$list" == "" ]]; then
     write "No Scripts Created Yet!"
   else
-    [[ "$1" =~ ^(-1|rows)$ ]] && printf "$list" || printf "$list" | column
+    [[ "$1" =~ ^(-1|rows)$ ]] && printf "$list\n" || printf "$list\n" | column
   fi
 }
 
