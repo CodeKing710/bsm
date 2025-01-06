@@ -111,7 +111,7 @@ __args() {
 __cmds() {
   # Same as args but easier to read
   while [[ -n "$1" ]]; do
-    case "$(echo "$1" | tr -s '[:upper:]' '[:lower:]')" in
+    case "$(echo "$1" | tr '[:upper:]' '[:lower:]')" in
       create )
         shift
         [[ -z "$1" ]] && { error "Missing required value: 'NAME'"; return; }
@@ -191,7 +191,7 @@ __sh() {
   while [[ true ]]; do
     printf "\e[1;36mbsm\e[0m>"
     read -rep ' ' stdin
-    stdin="$(echo "$stdin" | tr -s '[:upper:]' '[:lower:]')"
+    stdin="$(echo "$stdin" | tr '[:upper:]' '[:lower:]')"
     if [[ "${stdin}" == "exit" || "${stdin}" == "quit" ]]; then
       break
     elif [[ "${stdin}" == "pass" ]]; then
@@ -218,7 +218,7 @@ __shopt() {
       local rule="${1%%=*}"
       local oldvalue="$(cat "$cfg" | grep "$rule" | cut -d= -f2)"
       local newvalue="${1##*=}"
-      newvalue="$(echo "$newvalue" | tr -s '[:upper:]' '[:lower:]')"
+      newvalue="$(echo "$newvalue" | tr '[:upper:]' '[:lower:]')"
       # Check by type
       case "$rule" in
         # Booleans
@@ -419,7 +419,7 @@ __config() {
       local rule="${1%%=*}"
       local oldvalue="$(cat "$cfg" | grep "$rule" | cut -d= -f2)"
       local newvalue="${1##*=}"
-      newvalue="$(echo "$newvalue" | tr -s '[:upper:]' '[:lower:]')"
+      newvalue="$(echo "$newvalue" | tr '[:upper:]' '[:lower:]')"
       # Check value lists for specific settings
       case "$rule" in
         autoupdate )
@@ -458,14 +458,14 @@ __config() {
 
 __uninstall() {
   read -p "Are you sure you want to uninstall BSM? [Y\n] " yn
-  yn="$(echo "$yn" | tr -s '[:upper:]' '[:lower:]')"
+  yn="$(echo "$yn" | tr '[:upper:]' '[:lower:]')"
   if [[ "${yn}" =~ 'y' ]]; then
     write "Uninstalling BSM..."
     rm "$HOME/bin/bsm"
     rm -r "$HOME/.bsm"
 
     read -p "Did you want to remove the repo as well? [Y\n] " yn
-    yn="$(echo "$yn" | tr -s '[:upper:]' '[:lower:]')"
+    yn="$(echo "$yn" | tr '[:upper:]' '[:lower:]')"
     if [[ "${yn}" =~ 'y' ]]; then
       write "Removing repo..."
       rm -r "$repo"
