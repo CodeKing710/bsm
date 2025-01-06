@@ -333,6 +333,8 @@ __create() {
 
     local scriptloc="${scriptroot}/${2}"
     printf "${1}${3} Script - ${2}\n${3} Purpose: XYZ\n\n`[ -n "$4" ] && echo ${4}`" > "${scriptloc}" && write "Successfully created script '${2}'!\n" || error "Failed to create script ${2} at ${scriptloc}!"
+    # Make script executable to the user and the group
+    chmod 775 "${scriptloc}"
 
     # Set the current working script (__cws) to the newly created script
     __cws="$2"
