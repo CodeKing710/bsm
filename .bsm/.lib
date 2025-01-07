@@ -246,7 +246,7 @@ __create() {
   [[ ! -e "$scriptroot" ]] && mkdir "$scriptroot"
 
   # Check if venv location is supplied
-  local envshebang="#!/bin/env "
+  local envshebang="#!/usr/bin/env "
   local env=""
   local envpath=""
 
