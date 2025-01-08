@@ -11,8 +11,8 @@ install() {
   cp -f "$repo"/.bsm/.lib "$HOME"/.bsm/.lib || return 1
   cp -f "$repo"/.bsm/help "$HOME"/.bsm/help || return 1
   cp -f "$repo"/.bsm/version "$HOME"/.bsm/version || return 1
-  # Attempt to add completion to system, otherwise default to ~/.d/.c/
-  [[ -e "$HOME/.d/bsm-comp" ]] || cp -f "$repo/.bsm/bsm-comp" "$HOME/.d/bsm-comp"
+  # Attempt to add completion to system, otherwise default to ~/.d/
+  cp -f "$repo/.bsm/bsm-comp" "$HOME/.d/bsm-comp"
   [[ ! "$(cat "$HOME"/.bashrc)" =~ "# BSM PATH ADD" ]] && { echo -e "# BSM PATH ADD\n[[ \"\$PATH\" != *\"\$HOME/scripts\"* ]] && export PATH=\"\$HOME/scripts:\$PATH\"" >> "$HOME"/.bashrc || return 1; }
   echo "BSM installed!"
 }
