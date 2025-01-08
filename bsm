@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Check for parent shell so we don't set any options inadvertently
 [[ ! "$$" -eq "$BASHPID" ]] && {
