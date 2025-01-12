@@ -2,7 +2,11 @@
 
 # BSM's installer
 install() {
-  local repo="$(find "$HOME" -type d -name bsm 2>/dev/null | head -1)"
+  if [[ -e "$HOME/repos/bsm" ]]; then
+		local repo="$HOME/repos/bsm"
+	else
+		local repo="$(find "$HOME" -type d -name bsm 2>/dev/null)"
+	fi
   cp -f "$repo"/bsm "$HOME"/bin/bsm || return 1
   [[ ! -e "$HOME/.bsm" ]] && mkdir "$HOME/.bsm"
   [[ ! -e "$HOME/.bsm/.cfg" ]] && cp -f "$repo"/.bsm/.cfg "$HOME/.bsm/.cfg"
