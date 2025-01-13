@@ -1,6 +1,7 @@
 # BSM Changelog
 
-# What's New (v3.2.0)
+## What's New (v3.5.0)
+
 - Made some under-the-hood changes
 - Port to new application style
 - Removed various unnecessary or unready functions
@@ -9,13 +10,21 @@
 - Color output
 - Virtual Environment support for Python and Node
 - Support for VEM (Virtual Environment Manager) users (Input name instead of path)
-- Cross-platform compatibility
-- [REMOVED] System-wide install option alongside default user-based install
+- True Cross-platform compatibility
+- Legacy compliance (down to Bash 3.2)
+- Quicker launching
 
-# What's Next (v3.3.0)
+## What's Next (v4.0.0)
 
-# Bugs
-## Key:
+- Break out script generators into heredoc files
+- Become POSIX Compliant (If need be)
+- Add support for more languages
+- Version detection and bash detection
+
+## Bugs
+
+### Key
+
 **BB=BSM Bug**
 **R=Resolved**
 **O=Outstanding**
