@@ -182,6 +182,8 @@ __cmds() {
 }
 
 __sh() {
+  # Load into alternate screen
+  tput smcup
   # Load BSM Shell options
   local motd="$(cat "$prgroot/motd.txt")"
   local hush_motd="$(cat "$prgroot/sh.cfg" | grep "hush_login" | cut -d= -f2)"
@@ -202,6 +204,9 @@ __sh() {
       __cmds "${stdin}"
     fi
   done
+
+  # Unload from alternate screen
+  tput rmcup
 }
 
 __shopt() {
