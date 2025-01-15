@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
 # BSM's Functions and Variables
 
@@ -7,25 +7,27 @@ __cwd="$(pwd)"
 __cws=""
 prgroot="$HOME/.bsm"
 scriptroot="$HOME/scripts"
-if [[ "$BASH_VERSION" =~ ^[0-3] ]]; then
-  cmds="^(create|open|rename|remove|config|sh|shell|list|version|help|update|reset|uninstall|getdeps)$"
-  cfg_type="^(bash|python|node|ruby|lisp|perl)$"
-else
-  declare -A lists
-  lists[cmds]="^(create|open|rename|remove|config|sh|shell|list|version|help|update|reset|uninstall|getdeps)$"
-  lists[cfg_type]="^(bash|python|node|ruby|lisp|perl)$"
-fi
+cmds="^(create|open|rename|remove|config|sh|shell|list|version|help|update|reset|uninstall|getdeps)$"
+cfg_type="^(bash|python|node|ruby|lisp|perl)$"
+itemlist=""
 
 # Output functions
 error() { printf "\e[31m[ERROR]\e[0m ${1}\n" >&2; }
-verbose() { [[ -n "$VERBOSE" ]] && printf "\e[32m[VERBOSE]\e[0m ${1}\n"; }
-write() { printf "\e[36m[BSM]\e[0m ${1}\n"; }
+verbose() { [ -n "$VERBOSE" ] && printf "\e[32m[VERBOSE]\e[0m ${1}\n"; }
+log() { printf "\e[36m[BSM]\e[0m ${1}\n"; }
+setarg() {
+  if printf "$1" | grep -q '^-' || ! echo "$1" | grep -qE "$cmds"; then
+    arg="$1"
+  else
+    arg="$(printf "$1" | tr '[:upper:]' '[:lower:]')"
+  fi
+}
 
 # Funcs
 __loadcfg() {
-  local cfg="$prgroot/.cfg"
-  editor="$(cat "$cfg" | grep 'editor' | cut -d '=' -f2)"
-  defaulttype="$(cat "$cfg" | grep 'defaulttype' | cut -d '=' -f2)"
+  cfg="$prgroot/.cfg"
+  editor="$(grep 'editor' "$cfg" | cut -d '=' -f2)"
+  defaulttype="$(grep 'defaulttype' "$cfg" | cut -d '=' -f2)"
 }
 # Config vars will be set via function in-case of needing reloaded
 __loadcfg
@@ -34,230 +36,213 @@ __args() {
   # Process args
   # Exit means arg list is not passed
   # Return means arg list recursively passed
-  while [[ -n "$1" ]]; do
-    case "$1" in
-      -c | --create )
+  while [ -n "$1" ]; do
+    setarg "$1"
+
+    case "$arg" in
+      -c | --create | create )
         shift
-        [[ -z "$1" ]] && error "Missing required value: 'NAME'" && exit
-        __create "$@"
-        return;;
-      -o | --open )
+        setarg "$1"
+        if [ -z "$arg" ]; then
+          error "Missing required value: 'NAME'"
+          [ "$in_shell" -eq 1 ] && return || exit 1
+        fi
+        __create "$@" # Rework this into a captured list until next arg or command is found
+        [ "$in_shell" -eq 1 ] && return || exit 0
+        ;;
+      -o | --open | open )
         shift
-        # [[ "$1" =~ '-' || -z "$1" ]] && echo "Missing required value: 'NAME'" && exit
-        __open "$1" # Can only open one file at a time so any more wouldn't make sense
-        exit;;
-      -r | --remove )
+        setarg "$1"
+        __open "$arg" # Rework to use captured list
+        [ "$in_shell" -eq 1 ] && return || exit 0
+        ;;
+      -r | --remove | remove | rm )
         shift
-        [[ "$1" =~ ^- || -z "$1" ]] && error "Missing required value: 'NAME'" && exit
+        setarg "$1"
+        if echo "$arg" | grep -q '^-' || [ -z "$arg" ]; then
+          error "Missing required value: 'NAME'"
+          [ "$in_shell" -eq 1 ] && return || exit 1
+        fi
         __remove "$@"
-        return;;
-      -n | --rename )
+        [ "$in_shell" -eq 1 ] && return || exit 0
+        ;;
+      -n | --rename | rename )
         shift
-        [[ "$1" =~ ^- || -z "$1" ]] && error "Missing required value: 'WORKING_SCRIPT'" && exit
-        [[ "$2" =~ ^- || -z "$2" ]] && error "Missing required value: 'NEW_NAME'" && exit
-        __rename "$@"
-        return;;
-      -C | --config )
+        setarg "$1"
+        if echo "$arg" | grep -q '^-' || [ -z "$arg" ]; then
+          error "Missing required value: 'WORKING_SCRIPT'"
+          prev="$arg"
+          [ "$in_shell" -eq 1 ] && return || exit 1
+        fi
         shift
-        [[ "$1" =~ ^- || -z "$1" ]] && error "Missing required value: 'RULE'" && exit
+        setarg "$1"
+        if echo "$arg" | grep -q '^-' || [ -z "$arg" ]; then
+          error "Missing required value: 'NEW_NAME'"
+          [ "$in_shell" -eq 1 ] && return || exit 1
+        fi
+        __rename "$prev" "$arg"
+        [ "$in_shell" -eq 1 ] && return || exit 0
+        ;;
+      -C | --config | config | cfg )
+        shift
+        setarg "$1"
+        if echo "$1" | grep -q '^-' || [ -z "$1" ]; then
+          error "Missing required value: 'RULE'"
+          [ "$in_shell" -eq 1 ] && return || exit 1
+        fi
         __config "$@"
-        return;;
-      -*l* | --list )
-        shift; __list "$@"
-        return;;
-      --interactive )
+        [ "$in_shell" -eq 1 ] && return || exit 0
+        ;;
+      -*l* | --list | list )
+        shift
+        setarg "$1"
+        __list "$arg"
+        [ "$in_shell" -eq 1 ] && return || exit 0
+        ;;
+      --interactive | sh | shell )
+        in_shell=1
         __sh
-        exit;;
-      -*V* | --verbose )
+        [ "$in_shell" -eq 1 ] && return || exit 0
+        ;;
+      --shopt | shopt )
+        shift
+        setarg "$1"
+        __shopt "$arg"
+        [ "$in_shell" -eq 1 ] && return || exit 0
+        ;;
+      -*V* | --verbose | verbose )
         VERBOSE=true
         ;;
-      -\? | -h | --help )
+      -\? | -h | --help | help )
         cat "$prgroot/help"
-        return;; # Because cmd mode references these options
-      -v | --version )
+        [ "$in_shell" -eq 1 ] && return || exit 0
+        ;;
+      -v | --version | version )
         cat "$prgroot/version"
-        return;; # Because cmd mode references these options
-      --update )
+        [ "$in_shell" -eq 1 ] && return || exit 0
+        ;;
+      --update | update )
         __update
-        exit;;
-      --reset-cfg )
+        [ "$in_shell" -eq 1 ] && return || exit 0
+        ;;
+      --reset-cfg | reset-cfg )
         verbose "Resetting BSM to default configuration..."
-        cp -f "$repo/.bsm/.cfg" "$HOME/.bsm/.cfg" && write "BSM has been reset!" || error "Failed to reset defaults!"
-        exit;;
-      --reset-shcfg )
+        cp -f "$repo/.bsm/.cfg" "$HOME/.bsm/.cfg" &&  log "BSM has been reset!" || error "Failed to reset defaults!"
+        [ "$in_shell" -eq 1 ] && return || exit 0
+        ;;
+      --reset-shcfg | reset-sh )
         verbose "Resetting BSM Shell to default configuration..."
-        cp -f "$repo/.bsm/sh.cfg" "$HOME/.bsm/sh.cfg" && write "BSM Shell has been reset!" || error "Failed to reset defaults!"
-        exit;;
-      --uninstall )
+        cp -f "$repo/.bsm/sh.cfg" "$HOME/.bsm/sh.cfg" &&  log "BSM Shell has been reset!" || error "Failed to reset defaults!"
+        [ "$in_shell" -eq 1 ] && return || exit 0
+        ;;
+      --uninstall | uninstall )
         __uninstall
-        exit;;
-      --dependencies )
+        exit 0;;
+      --dependencies | getdeps )
         __getdeps
-        exit;;
+        [ "$in_shell" -eq 1 ] && return || exit 0
+        ;;
       * )
         # Catch-all
-        if [[ ! "$1" =~ '-' ]]; then
-          __cmds "$@"
-        else
+        if echo "$1" | grep -q '^-'; then
           cat "$prgroot/help" | head -1
           error "\"$1\" is not an argument!"
-          exit
-        fi
-        return;;
-    esac
-  shift; done
-}
-
-__cmds() {
-  # Same as args but easier to read
-  while [[ -n "$1" ]]; do
-    case "$(echo "$1" | tr '[:upper:]' '[:lower:]')" in
-      create )
-        shift
-        [[ -z "$1" ]] && { error "Missing required value: 'NAME'"; return; }
-        __create "$@"
-        return;;
-      open )
-        shift
-        __open "$1"
-        return;;
-      rename )
-        shift
-        [[ "$1" =~ ^- || "$1" =~ $([[ "$BASH_VERSION" =~ ^[0-3] ]] && echo $cmds || echo ${list[cmds]}) || -z "$1" ]] && { error "Missing required value: 'OLD_NAME'"; return; }
-        [[ "$2" =~ ^- || "$2" =~ $([[ "$BASH_VERSION" =~ ^[0-3] ]] && echo $cmds || echo ${list[cmds]}) || -z "$2" ]] && { error "Missing required value: 'OLD_NAME'"; return; }
-        __rename "$@"
-        return;;
-      rm | remove )
-        shift
-        [[ "$1" =~ ^- || "$1" =~ $([[ "$BASH_VERSION" =~ ^[0-3] ]] && echo $cmds || echo ${list[cmds]}) || -z "$1" ]] && { error "Missing required value: 'NAME'"; return; }
-        __remove "$@"
-        return;;
-      cfg | config )
-        shift
-        [[ "$1" =~ ^- || "$1" =~ $([[ "$BASH_VERSION" =~ ^[0-3] ]] && echo ${cmds/list/} || echo ${lists[cmds]/list/}) || -z "$1" ]] && { error "Missing required value: 'RULE'"; return; }
-        __config "$@"
-        return;;
-      sh | shell )
-        __sh
-        ;;
-      shopt )
-        [[ -n "$1" ]] && shift
-        __shopt "$@"
-        return;;
-      list )
-        [[ -n "$1" ]] && shift
-        __list "$@"
-        return;;
-      version )
-        __args -v
-        ;;
-      help )
-        __args -h
-        ;;
-      update )
-        __update
-        ;;
-      reset )
-        shift
-        [[ -z "$1" ]] && { error "Missing required value: 'RESET_TYPE'"; return; }
-        [[ "$1" == "cfg" ]] && { __args --reset-cfg; return; }
-        [[ "$1" =~ "sh" ]] && { __args --reset-shcfg; return; }
-        return;;
-      uninstall )
-        __uninstall
-        exit;;
-      getdeps )
-        __getdeps
-        ;;
-      * )
-        if [[ "$1" =~ '-' ]]; then
-          __args "$@"
+          [ "$in_shell" -eq 1 ] && return || exit 1
         else
           cat "$prgroot/help" | head -1
-          error "\"$1\" is not an command!"
+          error "\"$1\" is not a command!"
+          [ "$in_shell" -eq 1 ] && return || exit 1
         fi
-        return;;
+        ;;
     esac
   shift; done
+
+  # Clear function vars
+  unset arg
 }
 
 __sh() {
   # Load into alternate screen
   tput smcup
   # Load BSM Shell options
-  local motd="$(cat "$prgroot/motd.txt")"
-  local hush_motd="$(cat "$prgroot/sh.cfg" | grep "hush_login" | cut -d= -f2)"
+  hush_motd="$(grep "hush_login" "$prgroot/sh.cfg" | cut -d= -f2)"
   # Welcome message
-  [[ "$hush_motd" == "false" ]] && printf "$motd\n\n"
+  [ "$hush_motd" = "false" ] && printf "$(cat "$prgroot/motd.txt")\n\n"
   # Purposeful infinite loop
-  while [[ true ]]; do
-    printf "\e[1;36mbsm\e[0m>"
-    read -rep ' ' stdin
-    stdin="$(echo "$stdin" | tr '[:upper:]' '[:lower:]')"
-    if [[ "${stdin}" == "exit" || "${stdin}" == "quit" ]]; then
+  while [ true ]; do
+    printf "\e[1;36mbsm\e[0m> "
+    read -r stdin
+    if [ "$stdin" = "exit" ] || [ "$stdin" = "quit" ]; then
       break
-    elif [[ "${stdin}" == "pass" ]]; then
+    elif [ "$stdin" = "pass" ]; then
       continue
-    elif [[ "${stdin}" =~ "pass" ]]; then
-      bash -c "$(echo "${stdin}" | cut -d ' ' -f2-)"
+    elif echo "$stdin" | grep -q "pass"; then
+      bash -c "$(echo "$stdin" | cut -d ' ' -f2-)"
     else
-      __cmds "${stdin}"
+      __args "$stdin"
     fi
   done
 
   # Unload from alternate screen
   tput rmcup
+
+  # Clear function vars
+  unset hush_motd stdin
 }
 
 __shopt() {
-  [[ -z "$1" ]] && { cat "$prgroot/sh.cfg"; return; }
+  [ -z "$1" ] && { cat "$prgroot/sh.cfg"; exit 0; }
   # Inner write function
   rwrite() {
     verbose "Setting rule from $oldvalue to $newvalue"
-    sed -i -e "s/$rule=$oldvalue/$rule=$newvalue/" $cfg
-    write "Updated rule $rule from $oldvalue to $newvalue!"
+    sed -i -e "s/$rule=$oldvalue/$rule=$newvalue/" "$shcfg"
+    log "Updated rule $rule from $oldvalue to $newvalue!"
   }
-  local cfg="$prgroot/sh.cfg"
-  until [[ "$1" =~ '-' || "$1" == "" || "$1" =~ $([[ "$BASH_VERSION" =~ ^[0-3] ]] && echo $cmds || echo ${list[cmds]}) ]]; do
-    [[ "$1" =~ '=' ]] && {
-      local rule="${1%%=*}"
-      local oldvalue="$(cat "$cfg" | grep "$rule" | cut -d= -f2)"
-      local newvalue="${1##*=}"
-      newvalue="$(echo "$newvalue" | tr '[:upper:]' '[:lower:]')"
-      # Check by type
-      case "$rule" in
-        # Booleans
-        hush_login )
-          [[ ! "${newvalue}" =~ ^(true|false)$ ]] && {
-            error "Value must be a boolean (true/false)!"; return
-          } || rwrite
-          ;;
-        # Unhandled get written as text
-        * )
+  shcfg="$prgroot/sh.cfg"
+  if echo "$1" | grep -q '='; then
+    rule="$(echo "$1" | cut -d= -f1)"
+    oldvalue="$(grep "$rule" "$shcfg" | cut -d= -f2)"
+    newvalue="$(echo "$1" | cut -d= -f2)"
+    newvalue="$(echo "$newvalue" | tr '[:upper:]' '[:lower:]')"
+    # Check by type
+    case "$rule" in
+      # Booleans
+      hush_login )
+        if ! echo "$newvalue" | egrep -q '^(true|false)$'; then
+          error "Value must be a boolean (true/false)!"
+          return 1
+        else
           rwrite
-          ;;
-      esac
-    } || {
-      [[ "$1" == "RESET" ]] && __args --reset-shcfg || {
-        local rule="$1"
-        echo "$(cat "$cfg" | grep "$rule")"
-      }
+        fi
+        ;;
+      * )
+        error "Not a shell option!"
+        return 1
+        ;;
+    esac
+  else
+    [ "$1" = "RESET" ] && __args --reset-shcfg || {
+      rule="$1"
+      echo "$(grep "$rule" "$shcfg")"
     }
-  shift; done; [[ -n "$@" ]] && __args "$@"
+  fi
+
+  # Clear the function
+  unset rwrite rule oldvalue newvalue shcfg
 }
 
 __create() {
   # Check that the scripts folder was made
-  [[ ! -e "$scriptroot" ]] && mkdir "$scriptroot"
+  [ ! -e "$scriptroot" ] && mkdir "$scriptroot"
 
   # Check if venv location is supplied
-  local envshebang="#!/usr/bin/env "
-  local env=""
-  local envpath=""
+  envshebang="#!/usr/bin/env "
+  env=""
+  envpath=""
 
   # Inner type select func
   proctype() {
-    local name="$1"
+    name="$1"
     # Node
     if [[ "$name" =~ ".js" ]]; then
       if [[ -n "$env" ]]; then
@@ -267,7 +252,7 @@ __create() {
         # If VEM is installed, it will list your envs and check if the name exists then use that path
         # Paths detected by the '/' that exists in each path
         if [[ -n "$(command -v vem)" ]]; then
-          local vemenv="$(vem js --path "$envpath" 2>/dev/null)"
+          vemenv="$(vem js --path "$envpath" 2>/dev/null)"
           [[ -z "$vemenv" ]] && error "No VEM env with name $envpath!" && exit
           envpath="$vemenv"
         else
@@ -291,7 +276,7 @@ __create() {
     elif [[ "$name" =~ ".py" ]]; then
       if [[ -n "$env" ]]; then
         if [[ -n "$(command -v vem)" ]]; then
-          local vemenv="$(vem py --path "$envpath" 2>/dev/null)"
+          vemenv="$(vem py --path "$envpath" 2>/dev/null)"
           [[ -e "$vemenv/bin" ]] && vemenv="$vemenv/bin" || vemenv="$vemenv/Scripts"
           [[ -z "$vemenv" ]] && error "No VEM env with name $envpath!" && exit
           envpath="$vemenv"
@@ -336,8 +321,8 @@ __create() {
     verbose "Writing data to script file..."
     verbose "Extra content: $4"
 
-    local scriptloc="${scriptroot}/${2}"
-    printf "${1}${3} Script - ${2}\n${3} Purpose: XYZ\n\n$([[ -n "$4" ]] && echo "${4}")" > "${scriptloc}" && write "Successfully created script '${2}'!\n" || error "Failed to create script ${2} at ${scriptloc}!"
+    scriptloc="${scriptroot}/${2}"
+    printf "${1}${3} Script - ${2}\n${3} Purpose: XYZ\n\n$([[ -n "$4" ]] && echo "${4}")" > "${scriptloc}" && log "Successfully created script '${2}'!\n" || error "Failed to create script ${2} at ${scriptloc}!"
     # Make script executable to the user and the group
     chmod 775 "${scriptloc}"
 
@@ -350,7 +335,7 @@ __create() {
   # unlimited values that are then followed by more args
   until [[ "$1" =~ ^- || -z "$1" || "$1" =~ $([[ "$BASH_VERSION" =~ ^[0-3] ]] && echo $cmds || echo ${list[cmds]}) ]]; do
     [[ "$1" =~ ^(-e|--env|env)$ ]] && env=true && shift && envpath="$1" && shift
-    local name="$1"
+    name="$1"
     
     verbose "Script name: ${name%.***}"
 
@@ -380,15 +365,15 @@ __open() {
 __remove() {
   # Loop until an arg is seen
   until [[ "$1" =~ ^- || "$1" == "" || "$1" =~ $([[ "$BASH_VERSION" =~ ^[0-3] ]] && echo $cmds || echo ${list[cmds]}) ]]; do
-    local name="$1"
-    rm "$scriptroot/$name" 2>/dev/null && write "Successfully removed script '$name'" || error "Unable to remove script '$name'"
+    name="$1"
+    rm "$scriptroot/$name" 2>/dev/null && log "Successfully removed script '$name'" || error "Unable to remove script '$name'"
   shift; done; [[ -n "$@" ]] && __args "$@"
 }
 
 __list() {
-  local list="$(ls -p1 "$scriptroot" 2>/dev/null)"
+  list="$(ls -p1 "$scriptroot" 2>/dev/null)"
   if [[ ! -e "$scriptroot" || "$list" == "" ]]; then
-    write "No Scripts Created Yet!"
+    log "No Scripts Created Yet!"
   else
     [[ "$1" =~ ^(-1|rows)$ ]] && printf "$list\n" || printf "$list\n" | column
   fi
@@ -398,11 +383,11 @@ __list() {
 __rename() {
   # Loop until arg or cmd is seen
   until [[ "$1" =~ ^- || "$1" == "" || "$1" =~ $([[ "$BASH_VERSION" =~ ^[0-3] ]] && echo $cmds || echo ${list[cmds]}) ]]; do
-    local old="$1"
-    local new="$2"
+    old="$1"
+    new="$2"
     shift # Ensure next arg in loop is not the new name
     if [ -n "$old" -a -n "$new" ]; then
-      mv "$scriptroot/$old" "$scriptroot/$new" 2>/dev/null && write "Successfully renamed '$old' to '$new'!"
+      mv "$scriptroot/$old" "$scriptroot/$new" 2>/dev/null && log "Successfully renamed '$old' to '$new'!"
       __cws="$new"
     else
       error "Format incorrect! Format: OLD_NAME NEW_NAME"
@@ -412,18 +397,18 @@ __rename() {
 
 # Variable arg style: rule rule=value
 __config() {
-  # Inner write function
+  # Inner log function
   rwrite() {
     verbose "Setting rule from $oldvalue to $newvalue"
     sed -i -e "s/$rule=$oldvalue/$rule=$newvalue/" $cfg
-    write "Updated rule $rule from $oldvalue to $newvalue!"
+    log "Updated rule $rule from $oldvalue to $newvalue!"
   }
-  local cfg="$prgroot/.cfg"
+  cfg="$prgroot/.cfg"
   until [[ "$1" =~ ^- || "$1" == "" || "$1" =~ $([[ "$BASH_VERSION" =~ ^[0-3] ]] && echo ${cmds/\|list/} || echo ${list[cmds]/\|list/}) ]]; do
     if [[ "$1" =~ '=' ]]; then
-      local rule="${1%%=*}"
-      local oldvalue="$(cat "$cfg" | grep "$rule" | cut -d= -f2)"
-      local newvalue="${1##*=}"
+      rule="${1%%=*}"
+      oldvalue="$(cat "$cfg" | grep "$rule" | cut -d= -f2)"
+      newvalue="${1##*=}"
       newvalue="$(echo "$newvalue" | tr '[:upper:]' '[:lower:]')"
       # Check value lists for specific settings
       case "$rule" in
@@ -457,7 +442,7 @@ __config() {
     elif [[ "$1" == 'RESET' ]]; then
       __args --reset-cfg
     fi
-    write "Rule: `cat "$cfg" | grep "\b$1\b" || error "No Rule Found!"`"
+    log "Rule: `cat "$cfg" | grep "\b$1\b" || error "No Rule Found!"`"
   shift; done; [[ -n "$@" ]] && __args "$@"
 }
 
@@ -465,19 +450,19 @@ __uninstall() {
   read -p "Are you sure you want to uninstall BSM? [Y\n] " yn
   yn="$(echo "$yn" | tr '[:upper:]' '[:lower:]')"
   if [[ "${yn}" =~ 'y' ]]; then
-    write "Uninstalling BSM..."
+    log "Uninstalling BSM..."
     rm "$HOME/bin/bsm"
     rm -r "$HOME/.bsm"
 
     read -p "Did you want to remove the repo as well? [Y\n] " yn
     yn="$(echo "$yn" | tr '[:upper:]' '[:lower:]')"
     if [[ "${yn}" =~ 'y' ]]; then
-      write "Removing repo..."
+      log "Removing repo..."
       rm -r "$repo"
     else
-      write "Keeping the repo"
+      log "Keeping the repo"
     fi
-    write "Successfully removed BSM!"
+    log "Successfully removed BSM!"
   fi
 }
 
@@ -485,7 +470,7 @@ __uninstall() {
 __getdeps() {
   [[ ! "$OSTYPE" =~ "linux" ]] && error "You must manually install the dependencies!" && return
   
-  write "Retrieving BSM dependencies..."
+  log "Retrieving BSM dependencies..."
   sudo apt-get install nodejs
   sudo apt-get install python
   sudo apt-get install ruby
@@ -496,8 +481,8 @@ __update() {
   verbose "Checking for updates..."
   if [[ `diff "$repo"/.bsm/.lib "$HOME"/.bsm/.lib` || `diff "$repo"/.bsm/version "$HOME"/.bsm/version` || `diff "$repo"/.bsm/help "$HOME"/.bsm/help` ]]; then 
     verbose "Updating BSM..."
-    "$repo/install" && write "Successfully installed BSM!"
+    "$repo/install" &&  log "Successfully installed BSM!"
   else
-    write "BSM up-to-date!"
+    log "BSM up-to-date!"
   fi
 }

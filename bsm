@@ -1,43 +1,37 @@
-#!/usr/bin/env bash
-
-# Check for parent shell so we don't set any options inadvertently
-[[ ! "$$" -eq "$BASHPID" ]] && {
-  shopt -q -s extglob
-  set -o emacs
-}
+#!/bin/sh
 
 # Set some configs prior to loading
-autoupdate="$(cat "$HOME"/.bsm/.cfg | grep 'autoupdate' | cut -d '=' -f2)"
+autoupdate="$(grep 'autoupdate' "$HOME/.bsm/.cfg" | cut -d '=' -f2)"
 
 # BSM's main code
 
 # Autoupdate
-if (( autoupdate )); then
-  if [[ -e "$HOME/repos/bsm" ]]; then
+if [ "$autoupdate" -eq 1 ]; then
+  if [ -e "$HOME/repos/bsm" ]; then
 		repo="$HOME/repos/bsm"
 	else
 		repo="$(find "$HOME" -type d -name bsm 2>/dev/null)"
 	fi
 
   # Check for updates
-  if [[ -n "$(diff "$repo"/.bsm/.lib "$HOME"/.bsm/.lib)" \
-  || -n "$(diff "$repo"/.bsm/version "$HOME"/.bsm/version)" \
-  || -n "$(diff "$repo"/.bsm/motd.txt "$HOME"/.bsm/motd.txt)" \
-  || -n "$(diff "$repo"/.bsm/help "$HOME"/.bsm/help)" \
-  || -n "$(diff "$repo"/bsm "$HOME"/bin/bsm)" \
-  || -n "$(diff "$repo"/.bsm/bsm-comp "$HOME"/.d/bsm-comp)" ]]; then
-    "$repo/install"
+  if [ -n "$(diff "$repo"/.bsm/.lib "$HOME"/.bsm/.lib)" ] \
+  || [ -n "$(diff "$repo"/.bsm/version "$HOME"/.bsm/version)" ] \
+  || [ -n "$(diff "$repo"/.bsm/motd.txt "$HOME"/.bsm/motd.txt)" ] \
+  || [ -n "$(diff "$repo"/.bsm/help "$HOME"/.bsm/help)" ] \
+  || [ -n "$(diff "$repo"/bsm "$HOME"/bin/bsm)" ] \
+  || [ -n "$(diff "$repo"/.bsm/bsm-comp "$HOME"/.d/bsm-comp)" ]; then
+    . "$repo/install"
   fi
 fi
 
 # Check for unit test
-if [[ -n "$BSM_TST" ]]; then
+if [ "$BSM_TST" -eq 1 ]; then
   # Load the lib from the repo and set prgroot to repo
-  echo -e "[BSM] UNIT TEST MODE! READING FROM REPO!"
-  source "$repo/.bsm/.lib"
+  printf "[BSM] UNIT TEST MODE! READING FROM REPO!\n"
+  . "$repo/.bsm/.lib"
   prgroot="$repo/.bsm"
 else
-  source "$HOME/.bsm/.lib"
+  . "$HOME/.bsm/.lib"
 fi
 
 # Run like normal (should select based on prod or test)
@@ -46,7 +40,7 @@ __bsm() {
   if [ -z "$1" ]; then
     __args --interactive
   else
-    if [[ "$1" =~ "-" ]]; then
+    if echo "$1" | grep '^-'; then
       # Arg mode
       __args "$@"
     else
@@ -59,6 +53,6 @@ __bsm() {
 __bsm "$@"
 
 # Cleanup for accidental sourcing
-[[ "$$" -eq "$BASHPID" ]] && { unset __bsm __args __sh __cmds __create __open __remove __rename __config __list __cwd __cws prgroot scriptroot editor autoupdate defaulttype repo lists write error verbose; }
+[ "$$" -eq "$PPID" ] && { unset __bsm __args __sh __cmds __create __open __remove __rename __config __list __cwd __cws prgroot scriptroot editor autoupdate defaulttype repo lists write error verbose; }
 
 exit 0
