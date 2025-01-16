@@ -208,7 +208,7 @@ __shopt() {
     case "$rule" in
       # Booleans
       hush_login )
-        if ! echo "$newvalue" | egrep -q '^(true|false)$'; then
+        if ! echo "$newvalue" | grep -qE '^(true|false)$'; then
           error "Value must be a boolean (true/false)!"
           return 1
         else
@@ -244,75 +244,89 @@ __create() {
   proctype() {
     name="$1"
     # Node
-    if [[ "$name" =~ ".js" ]]; then
-      if [[ -n "$env" ]]; then
+    if echo "$name" | grep -q ".js"; then
+      name="$(echo "$1" | cut -d. -f1)"
+      if [ -n "$env" ]; then
         # [[ ! `command -v vem` ]] && echo -e "Must install Virtual Environment Manager to take advantage of Node Virtual Environments!\nRun \`git clone https://github.com/CodeKing710/vem; vem/install;\` to download and install VEM!" && exit
         # VEM is optional to be able to manage your envs
         # To allow reference, use the path to THE PARENT FOLDER of the node_modules folder that has the desired packages
         # If VEM is installed, it will list your envs and check if the name exists then use that path
         # Paths detected by the '/' that exists in each path
-        if [[ -n "$(command -v vem)" ]]; then
+        if [ -n "$(command -v vem)" ]; then
           vemenv="$(vem js --path "$envpath" 2>/dev/null)"
-          [[ -z "$vemenv" ]] && error "No VEM env with name $envpath!" && exit
+          [ -z "$vemenv" ] && error "No VEM env with name $envpath!" && exit
           envpath="$vemenv"
         else
           # Assume path, bail upon no path
-          [[ ! "$envpath" =~ '/' ]] && error "VEM must be installed to use names!\nIf this is a path, please prepend it with './' or use the absolute path!" && exit
+          if ! echo "$envpath" | grep -q '/'; then
+            error "VEM must be installed to use names!\nIf this is a path, please prepend it with './' or use the absolute path!"
+            return 1
+          fi
         fi
-        if [[ ! -e "$envpath" ]]; then
+        if [ ! -e "$envpath" ]; then
           error "Environment path doesn't exist!"
           error "$envpath"
-          exit
+          return 1
         else
           # envshebang="#!$envpath/"
           envpath="$envpath/node_modules/"
-          [[ $TERM_PROGRAM == 'mintty' ]] && envpath=$(cygpath -w "$envpath" | sed -e 's;\\;/;g;' | sed -e 's;/;//;g;' | sed -e 's;//;\\\\\\\\;g;') || envpath="$envpath"
-          mkfile "${envshebang}node\n\n" "${name%.***}" "//" "const venv = '$envpath'\nconst getpkg = (loc) => {\n\t/**\n\t\tWith this being a venv,\n\t\tevery reference to a package that isn't directly in the project\n\t\tmust go through this wrapper\n\t\tto ensure node is looking in the right place.\n\n\t\tIf you are getting a package relative to your project,\n\t\tUSE REQUIRE!! Or use ESM import syntax\n\t**/\n\trequire(\`\${venv}\${loc}\`);\n}\n"
+          [ $TERM_PROGRAM = 'mintty' ] && envpath=$(cygpath -w "$envpath" | sed -e 's;\\;/;g;' | sed -e 's;/;//;g;' | sed -e 's;//;\\\\\\\\;g;') || envpath="$envpath"
+          mkfile "${envshebang}node\n\n" "${name}" "//" "const venv = '$envpath'\nconst getpkg = (loc) => {\n\t/**\n\t\tWith this being a venv,\n\t\tevery reference to a package that isn't directly in the project\n\t\tmust go through this wrapper\n\t\tto ensure node is looking in the right place.\n\n\t\tIf you are getting a package relative to your project,\n\t\tUSE REQUIRE!! Or use ESM import syntax\n\t**/\n\trequire(\`\${venv}\${loc}\`);\n}\n"
         fi
       else
-        mkfile "${envshebang}node\n\n" "${name%.***}" "//"
+        mkfile "${envshebang}node\n\n" "${name}" "//"
       fi
     # Python
-    elif [[ "$name" =~ ".py" ]]; then
-      if [[ -n "$env" ]]; then
-        if [[ -n "$(command -v vem)" ]]; then
+    elif echo "$name" | grep -q ".py"; then
+      name="$(echo "$1" | cut -d. -f1)"
+      if [ -n "$env" ]; then
+        if [ -n "$(command -v vem)" ]; then
           vemenv="$(vem py --path "$envpath" 2>/dev/null)"
-          [[ -e "$vemenv/bin" ]] && vemenv="$vemenv/bin" || vemenv="$vemenv/Scripts"
-          [[ -z "$vemenv" ]] && error "No VEM env with name $envpath!" && exit
+          [ -e "$vemenv/bin" ] && vemenv="$vemenv/bin" || vemenv="$vemenv/Scripts"
+          [ -z "$vemenv" ] && { error "No VEM env with name $envpath!"; return 1; }
           envpath="$vemenv"
         else
           # Assume path, bail upon no path
-          [[ ! "$envpath" =~ '/' ]] && error "VEM must be installed to use names!\nIf this is a path, please prepend it with './' or use the absolute path!" && exit
+          if ! echo "$envpath" | grep -q '/'; then
+            error "VEM must be installed to use names!\nIf this is a path, please prepend it with './' or use the absolute path!"
+            return 1
+          fi
         fi
         if [[ ! -e "$envpath" ]]; then
           error "Environment path doesn't exist!"
           error "$envpath"
-          exit
+          return 1
         else
           envshebang="#!$envpath/"
-          mkfile "${envshebang}python\n\n" "${name%.***}" "#"
+          mkfile "${envshebang}python\n\n" "${name}" "#"
         fi
       else
-        mkfile "${envshebang}python\n\n" "${name%.***}" "#"
+        mkfile "${envshebang}python\n\n" "${name}" "#"
       fi
     # Ruby
-    elif [[ "$name" =~ ".rb" ]]; then
-      mkfile "${envshebang}ruby\n\n" "${name%.***}" "#"
+    elif echo "$name" | grep -q ".rb"; then
+      name="$(echo "$1" | cut -d. -f1)"
+      mkfile "${envshebang}ruby\n\n" "${name}" "#"
     # LISP
-    elif [[ "$name" =~ ".cl" ]]; then
-      mkfile "${envshebang}-S sbcl --script\n\n" "${name%.***}" ";"
+    elif echo "$name" | grep -q ".cl"; then
+      name="$(echo "$1" | cut -d. -f1)"
+      mkfile "${envshebang}-S sbcl --script\n\n" "${name}" ";"
     # PowerShell
-    elif [[ "$name" =~ ".ps1" ]]; then
-      mkfile "${envshebang}powershell\n\n" "${name%.***}" "#"
+    elif echo "$name" | grep -q ".ps1"; then
+      name="$(echo "$1" | cut -d. -f1)"
+      mkfile "${envshebang}powershell\n\n" "${name}" "#"
     # Perl
-    elif [[ "$name" =~ ".pl" ]]; then
-      mkfile "${envshebang}perl\n\n" "${name%.***}" "#"
+    elif echo "$name" | grep -q ".pl"; then
+      name="$(echo "$1" | cut -d. -f1)"
+      mkfile "${envshebang}perl\n\n" "${name}" "#"
     # Bash
-    elif [[ "$name" =~ ".sh" ]]; then
-      mkfile "${envshebang}bash\n\n" "${name%.***}" "#"
+    elif echo "$name" | grep -q ".sh"; then
+      name="$(echo "$1" | cut -d. -f1)"
+      mkfile "${envshebang}bash\n\n" "${name}" "#"
     # Default script type
     else
-      mkfile "${envshebang}$(echo "$defaulttype" | sed -e 's;lisp;-S sbcl --script;gi;')\n\n" "${name%.***}" "#"
+      name="$(echo "$1" | cut -d. -f1)"
+      mkfile "${envshebang}$(echo "$defaulttype" | sed -e 's;lisp;-S sbcl --script;gi;')\n\n" "${name}" "#"
     fi
   }
   # Inner file generator func
@@ -322,9 +336,9 @@ __create() {
     verbose "Extra content: $4"
 
     scriptloc="${scriptroot}/${2}"
-    printf "${1}${3} Script - ${2}\n${3} Purpose: XYZ\n\n$([[ -n "$4" ]] && echo "${4}")" > "${scriptloc}" && log "Successfully created script '${2}'!\n" || error "Failed to create script ${2} at ${scriptloc}!"
+    printf "${1}${3} Script - ${2}\n${3} Purpose: XYZ\n\n$([ -n "$4" ] && echo "${4}")" > "${scriptloc}" && log "Successfully created script '${2}'!\n" || error "Failed to create script ${2} at ${scriptloc}!"
     # Make script executable to the user and the group
-    chmod 775 "${scriptloc}"
+    chmod 755 "${scriptloc}"
 
     # Set the current working script (__cws) to the newly created script
     __cws="$2"
@@ -333,56 +347,66 @@ __create() {
   # Finishing the loop will hand back the arg list
   # This behavior is only necessity for args that accept
   # unlimited values that are then followed by more args
-  until [[ "$1" =~ ^- || -z "$1" || "$1" =~ $([[ "$BASH_VERSION" =~ ^[0-3] ]] && echo $cmds || echo ${list[cmds]}) ]]; do
-    [[ "$1" =~ ^(-e|--env|env)$ ]] && env=true && shift && envpath="$1" && shift
+  until echo "$1" | grep -q '^-' || [ -z "$1" ] || echo "$1" grep -qE $cmds; do
+    if echo "$1" | grep -qE '^(-e|--env|env)$'; then
+      env=true
+      shift
+      envpath="$1"
+      shift
+    fi
     name="$1"
     
-    verbose "Script name: ${name%.***}"
+    verbose "Script name: $(echo "$name" | cut -d. -f1)"
 
     # Check for conflict of name
-    if [ -e "$scriptroot/${name%.***}" ]; then
-      printf "\e[1;31m[WARNING]\e[0m The script ${name%.***} already exists! Did you want to overwrite? [Y\\\\n] "
+    if [ -e "$scriptroot/$(echo "$name" | cut -d. -f1)" ]; then
+      printf "\e[1;31m[WARNING]\e[0m The script $(echo "$name" | cut -d. -f1) already exists! Did you want to overwrite? [Y\\\\n] "
       read yn
-      [[ "${yn,,}" =~ "y" ]] && proctype "$name" || echo "Keeping original script '${name%.***}'"
+      yn="$(echo "$yn" | tr '[:upper:]' '[:lower:]')"
+      [ "${yn}" = "y" ] && proctype "$name" || echo "Keeping original script '$(echo "$name" | cut -d. -f1)'"
     else
       proctype "$name"
     fi
     env=""
     envpath=""
-  shift; done; [[ -n "$@" ]] && __args "$@"
+  shift; done
 }
 
 __open() {
-  if [[ -n "$1" ]]; then # Arg passed
+  if [ -n "$1" ]; then # Arg passed
     __cws="$1" # Set
-  elif [[ -z "$__cws" && -n "$1" ]]; then
+  elif [ -z "$__cws" ] && [ -n "$1" ]; then
     __cws="$1"
   fi
 
-  [[ -n "$__cws" ]] && "$editor" "$scriptroot/$__cws" || error "No file to open!"
+  [ -n "$__cws" ] && exec "$editor" "$scriptroot/$__cws" || error "No file to open!"
 }
 
 __remove() {
   # Loop until an arg is seen
-  until [[ "$1" =~ ^- || "$1" == "" || "$1" =~ $([[ "$BASH_VERSION" =~ ^[0-3] ]] && echo $cmds || echo ${list[cmds]}) ]]; do
+  until echo "$1" | grep -q '^-' || [ -z "$1" ] || "$1" | grep -qE "$cmds"; do
     name="$1"
     rm "$scriptroot/$name" 2>/dev/null && log "Successfully removed script '$name'" || error "Unable to remove script '$name'"
-  shift; done; [[ -n "$@" ]] && __args "$@"
+  shift; done
 }
 
 __list() {
   list="$(ls -p1 "$scriptroot" 2>/dev/null)"
-  if [[ ! -e "$scriptroot" || "$list" == "" ]]; then
+  if [ ! -e "$scriptroot" ] || [ -z "$list" ]; then
     log "No Scripts Created Yet!"
   else
-    [[ "$1" =~ ^(-1|rows)$ ]] && printf "$list\n" || printf "$list\n" | column
+    if echo "$1" | grep -qE '^(-1|rows)$'; then
+      printf "$list\n"
+    else
+      printf "$list\n" | column
+    fi
   fi
 }
 
 # Accepted arg style: oldname>newname
 __rename() {
   # Loop until arg or cmd is seen
-  until [[ "$1" =~ ^- || "$1" == "" || "$1" =~ $([[ "$BASH_VERSION" =~ ^[0-3] ]] && echo $cmds || echo ${list[cmds]}) ]]; do
+  until echo "$1" | grep -q '^-' || [ -z "$1" ] || "$1" | grep -qE "$cmds"; do
     old="$1"
     new="$2"
     shift # Ensure next arg in loop is not the new name
@@ -392,7 +416,7 @@ __rename() {
     else
       error "Format incorrect! Format: OLD_NAME NEW_NAME"
     fi
-  shift; done; [[ -n "$@" ]] && __args "$@"
+  shift; done
 }
 
 # Variable arg style: rule rule=value
@@ -404,7 +428,7 @@ __config() {
     log "Updated rule $rule from $oldvalue to $newvalue!"
   }
   cfg="$prgroot/.cfg"
-  until [[ "$1" =~ ^- || "$1" == "" || "$1" =~ $([[ "$BASH_VERSION" =~ ^[0-3] ]] && echo ${cmds/\|list/} || echo ${list[cmds]/\|list/}) ]]; do
+  until echo "$1" | grep -q '^-' || [ -z "$1" ] || "$1" | grep -qE "$(echo "$cmds" | sed 's/|list//g')"; do
     if [[ "$1" =~ '=' ]]; then
       rule="${1%%=*}"
       oldvalue="$(cat "$cfg" | grep "$rule" | cut -d= -f2)"
