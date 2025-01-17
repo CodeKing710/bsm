@@ -93,7 +93,7 @@ __args() {
         __config "$@"
         [ "$in_shell" -eq 1 ] && return || exit 0
         ;;
-      -*l* | --list | list )
+      --list | list | -l )
         shift
         setarg "$1"
         __list "$arg"
@@ -110,7 +110,7 @@ __args() {
         __shopt "$arg"
         [ "$in_shell" -eq 1 ] && return || exit 0
         ;;
-      -*V* | --verbose | verbose )
+      --verbose | verbose | -V )
         VERBOSE=true
         ;;
       -\? | -h | --help | help )
@@ -127,12 +127,20 @@ __args() {
         ;;
       --reset-cfg | reset-cfg )
         verbose "Resetting BSM to default configuration..."
-        cp -f "$repo/.bsm/.cfg" "$HOME/.bsm/.cfg" &&  log "BSM has been reset!" || error "Failed to reset defaults!"
+        if cp -f "$repo/.bsm/.cfg" "$HOME/.bsm/.cfg"; then
+          log "BSM has been reset!"
+        else
+          error "Failed to reset defaults!"
+        fi
         [ "$in_shell" -eq 1 ] && return || exit 0
         ;;
       --reset-shcfg | reset-sh )
         verbose "Resetting BSM Shell to default configuration..."
-        cp -f "$repo/.bsm/sh.cfg" "$HOME/.bsm/sh.cfg" &&  log "BSM Shell has been reset!" || error "Failed to reset defaults!"
+        if cp -f "$repo/.bsm/sh.cfg" "$HOME/.bsm/sh.cfg"; then
+          log "BSM Shell has been reset!"
+        else
+          error "Failed to reset defaults!"
+        fi
         [ "$in_shell" -eq 1 ] && return || exit 0
         ;;
       --uninstall | uninstall )
@@ -145,11 +153,11 @@ __args() {
       * )
         # Catch-all
         if echo "$1" | grep -q '^-'; then
-          cat "$prgroot/help" | head -1
+          head -1 "$prgroot/help"
           error "\"$1\" is not an argument!"
           [ "$in_shell" -eq 1 ] && return || exit 1
         else
-          cat "$prgroot/help" | head -1
+          head -1 "$prgroot/help"
           error "\"$1\" is not a command!"
           [ "$in_shell" -eq 1 ] && return || exit 1
         fi
@@ -169,7 +177,7 @@ __sh() {
   # Welcome message
   [ "$hush_motd" = "false" ] && printf "$(cat "$prgroot/motd.txt")\n\n"
   # Purposeful infinite loop
-  while [ true ]; do
+  while true; do
     printf "\e[1;36mbsm\e[0m> "
     read -r stdin
     if [ "$stdin" = "exit" ] || [ "$stdin" = "quit" ]; then
@@ -221,10 +229,12 @@ __shopt() {
         ;;
     esac
   else
-    [ "$1" = "RESET" ] && __args --reset-shcfg || {
+    if [ "$1" = "RESET" ]; then
+      __args --reset-shcfg
+    else
       rule="$1"
-      echo "$(grep "$rule" "$shcfg")"
-    }
+      grep "$rule" "$shcfg"
+    fi
   fi
 
   # Clear the function
@@ -270,7 +280,7 @@ __create() {
         else
           # envshebang="#!$envpath/"
           envpath="$envpath/node_modules/"
-          [ $TERM_PROGRAM = 'mintty' ] && envpath=$(cygpath -w "$envpath" | sed -e 's;\\;/;g;' | sed -e 's;/;//;g;' | sed -e 's;//;\\\\\\\\;g;') || envpath="$envpath"
+          [ "$TERM_PROGRAM" = 'mintty' ] && envpath=$(cygpath -w "$envpath" | sed -e 's;\\;/;g;' | sed -e 's;/;//;g;' | sed -e 's;//;\\\\\\\\;g;')
           mkfile "${envshebang}node\n\n" "${name}" "//" "const venv = '$envpath'\nconst getpkg = (loc) => {\n\t/**\n\t\tWith this being a venv,\n\t\tevery reference to a package that isn't directly in the project\n\t\tmust go through this wrapper\n\t\tto ensure node is looking in the right place.\n\n\t\tIf you are getting a package relative to your project,\n\t\tUSE REQUIRE!! Or use ESM import syntax\n\t**/\n\trequire(\`\${venv}\${loc}\`);\n}\n"
         fi
       else
@@ -292,7 +302,7 @@ __create() {
             return 1
           fi
         fi
-        if [[ ! -e "$envpath" ]]; then
+        if [ ! -e "$envpath" ]; then
           error "Environment path doesn't exist!"
           error "$envpath"
           return 1
@@ -336,7 +346,11 @@ __create() {
     verbose "Extra content: $4"
 
     scriptloc="${scriptroot}/${2}"
-    printf "${1}${3} Script - ${2}\n${3} Purpose: XYZ\n\n$([ -n "$4" ] && echo "${4}")" > "${scriptloc}" && log "Successfully created script '${2}'!\n" || error "Failed to create script ${2} at ${scriptloc}!"
+    if printf "${1}${3} Script - ${2}\n${3} Purpose: XYZ\n\n$([ -n "$4" ] && echo "${4}")" > "${scriptloc}"; then
+      log "Successfully created script '${2}'!\n"
+    else
+      error "Failed to create script ${2} at ${scriptloc}!"
+    fi
     # Make script executable to the user and the group
     chmod 755 "${scriptloc}"
 
@@ -361,9 +375,13 @@ __create() {
     # Check for conflict of name
     if [ -e "$scriptroot/$(echo "$name" | cut -d. -f1)" ]; then
       printf "\e[1;31m[WARNING]\e[0m The script $(echo "$name" | cut -d. -f1) already exists! Did you want to overwrite? [Y\\\\n] "
-      read yn
+      read -r yn
       yn="$(echo "$yn" | tr '[:upper:]' '[:lower:]')"
-      [ "${yn}" = "y" ] && proctype "$name" || echo "Keeping original script '$(echo "$name" | cut -d. -f1)'"
+      if [ "${yn}" = "y" ]; then
+        proctype "$name"
+      else
+        echo "Keeping original script '$(echo "$name" | cut -d. -f1)'"
+      fi
     else
       proctype "$name"
     fi
@@ -379,14 +397,22 @@ __open() {
     __cws="$1"
   fi
 
-  [ -n "$__cws" ] && exec "$editor" "$scriptroot/$__cws" || error "No file to open!"
+  if [ -n "$__cws" ]; then
+    exec "$editor" "$scriptroot/$__cws"
+  else
+    error "No file to open!"
+  fi
 }
 
 __remove() {
   # Loop until an arg is seen
   until echo "$1" | grep -q '^-' || [ -z "$1" ] || "$1" | grep -qE "$cmds"; do
     name="$1"
-    rm "$scriptroot/$name" 2>/dev/null && log "Successfully removed script '$name'" || error "Unable to remove script '$name'"
+    if rm "$scriptroot/$name" 2>/dev/null; then
+      log "Successfully removed script '$name'"
+    else
+      error "Unable to remove script '$name'"
+    fi
   shift; done
 }
 
@@ -410,7 +436,7 @@ __rename() {
     old="$1"
     new="$2"
     shift # Ensure next arg in loop is not the new name
-    if [ -n "$old" -a -n "$new" ]; then
+    if [ -n "$old" ] && [ -n "$new" ]; then
       mv "$scriptroot/$old" "$scriptroot/$new" 2>/dev/null && log "Successfully renamed '$old' to '$new'!"
       __cws="$new"
     else
@@ -424,32 +450,32 @@ __config() {
   # Inner log function
   rwrite() {
     verbose "Setting rule from $oldvalue to $newvalue"
-    sed -i -e "s/$rule=$oldvalue/$rule=$newvalue/" $cfg
+    sed -i -e "s/$rule=$oldvalue/$rule=$newvalue/" "$cfg"
     log "Updated rule $rule from $oldvalue to $newvalue!"
   }
   cfg="$prgroot/.cfg"
-  until echo "$1" | grep -q '^-' || [ -z "$1" ] || "$1" | grep -qE "$(echo "$cmds" | sed 's/|list//g')"; do
-    if [[ "$1" =~ '=' ]]; then
-      rule="${1%%=*}"
-      oldvalue="$(cat "$cfg" | grep "$rule" | cut -d= -f2)"
-      newvalue="${1##*=}"
+  until echo "$1" | grep -q '^-' || [ -z "$1" ] || echo "$1" | grep -qE "$(echo "$cmds" | sed 's/|list//g')"; do
+    if echo "$1" | grep -q '='; then
+      rule="$(echo "$1" | cut -d= -f1)"
+      oldvalue="$(grep "$rule" "$cfg" | cut -d= -f2)"
+      newvalue="$(echo "$1" | cut -d= -f2)"
       newvalue="$(echo "$newvalue" | tr '[:upper:]' '[:lower:]')"
       # Check value lists for specific settings
       case "$rule" in
         autoupdate )
           # Bool rules
-          if [[ ! "${newvalue}" =~ ^(true|false)$ ]]; then
+          if ! echo "${newvalue}" | grep -qE '^(true|false)$'; then
             error "Value must be a boolean!"
-            exit
+            return 1
           else
             rwrite
           fi
           ;;
         defaulttype )
           # Type rules
-          if [[ ! "${newvalue}" =~ $([[ "$BASH_VERSION" =~ ^[0-3] ]] && echo $cfg_type || echo ${list[cfg_type]}) ]]; then
+          if ! echo "${newvalue}" | grep -qE "$cfg_type"; then
             error "Value must be Bash, Python, Ruby, LISP, Perl, or Node!"
-            exit
+            return 1
           else
             rwrite
           fi
@@ -459,28 +485,30 @@ __config() {
           rwrite
           ;;
       esac
-    elif [[ "$1" == 'list' ]]; then
+    elif [ "$1" = 'list' ]; then
       echo "Current Settings:"
       cat "$cfg"
       return
-    elif [[ "$1" == 'RESET' ]]; then
+    elif [ "$1" = 'RESET' ]; then
       __args --reset-cfg
     fi
-    log "Rule: `cat "$cfg" | grep "\b$1\b" || error "No Rule Found!"`"
-  shift; done; [[ -n "$@" ]] && __args "$@"
+    log "Rule: $(grep -E "\b$1\b" "$cfg" || error "No Rule Found!")"
+  shift; done
 }
 
 __uninstall() {
-  read -p "Are you sure you want to uninstall BSM? [Y\n] " yn
+  printf "Are you sure you want to uninstall BSM? [Y\n] "
+  read -r yn
   yn="$(echo "$yn" | tr '[:upper:]' '[:lower:]')"
-  if [[ "${yn}" =~ 'y' ]]; then
+  if [ "${yn}" = 'y' ]; then
     log "Uninstalling BSM..."
     rm "$HOME/bin/bsm"
     rm -r "$HOME/.bsm"
 
-    read -p "Did you want to remove the repo as well? [Y\n] " yn
+    printf "Did you want to remove the repo as well? [Y\n] "
+    read -r yn
     yn="$(echo "$yn" | tr '[:upper:]' '[:lower:]')"
-    if [[ "${yn}" =~ 'y' ]]; then
+    if [ "${yn}" = 'y' ]; then
       log "Removing repo..."
       rm -r "$repo"
     else
@@ -492,7 +520,10 @@ __uninstall() {
 
 # Testing phase
 __getdeps() {
-  [[ ! "$OSTYPE" =~ "linux" ]] && error "You must manually install the dependencies!" && return
+  if ! uname | grep -q "Linux"; then
+    error "You must manually install the dependencies!"
+    return 1
+  fi
   
   log "Retrieving BSM dependencies..."
   sudo apt-get install nodejs
@@ -503,9 +534,9 @@ __getdeps() {
 
 __update() {
   verbose "Checking for updates..."
-  if [[ `diff "$repo"/.bsm/.lib "$HOME"/.bsm/.lib` || `diff "$repo"/.bsm/version "$HOME"/.bsm/version` || `diff "$repo"/.bsm/help "$HOME"/.bsm/help` ]]; then 
+  if [ -n "$(diff "$repo/.bsm/.lib" "$HOME/.bsm/.lib")" ] || [ -n "$(diff "$repo/.bsm/version" "$HOME/.bsm/version")" ] || [ -n "$(diff "$repo/.bsm/help" "$HOME/.bsm/help")" ]; then 
     verbose "Updating BSM..."
-    "$repo/install" &&  log "Successfully installed BSM!"
+    . "$repo/install" && log "Successfully installed BSM!"
   else
     log "BSM up-to-date!"
   fi
