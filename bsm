@@ -1,16 +1,16 @@
 #!/bin/sh
 
 # Set some configs prior to loading
-autoupdate="$(grep 'autoupdate' "$HOME/.bsm/.cfg" | cut -d '=' -f2)"
+autoupdate="$(grep 'autoupdate' "$HOME/.bsm/.cfg" | cut -d= -f2)"
 
 # BSM's main code
 
 # Autoupdate
-if [ "$autoupdate" -eq 1 ]; then
+if [ -n "$autoupdate" ]; then
   if [ -e "$HOME/repos/bsm" ]; then
-		repo="$HOME/repos/bsm"
+		export repo="$HOME/repos/bsm"
 	else
-		repo="$(find "$HOME" -type d -name bsm 2>/dev/null)"
+		export repo="$(find "$HOME" -type d -name bsm 2>/dev/null)"
 	fi
 
   # Check for updates
@@ -22,14 +22,18 @@ if [ "$autoupdate" -eq 1 ]; then
   || [ -n "$(diff "$repo"/.bsm/bsm-comp "$HOME"/.d/bsm-comp)" ]; then
     . "$repo/install"
   fi
+
+  # Ensure files have time to write
+  sleep 1
 fi
 
 # Check for unit test
-if [ "$BSM_TST" -eq 1 ]; then
+if [ -n "$BSM_TST" ]; then
   # Load the lib from the repo and set prgroot to repo
   printf "[BSM] UNIT TEST MODE! READING FROM REPO!\n"
+  printf "Repo: $repo\n"
   . "$repo/.bsm/.lib"
-  prgroot="$repo/.bsm"
+  export prgroot="$repo/.bsm"
 else
   . "$HOME/.bsm/.lib"
 fi
@@ -40,13 +44,7 @@ __bsm() {
   if [ -z "$1" ]; then
     __args --interactive
   else
-    if echo "$1" | grep '^-'; then
-      # Arg mode
-      __args "$@"
-    else
-      # Command mode
-      __cmds "$@"
-    fi
+    __args "$@"
   fi
 }
 

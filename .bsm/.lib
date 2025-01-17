@@ -10,6 +10,7 @@ scriptroot="$HOME/scripts"
 cmds="^(create|open|rename|remove|config|sh|shell|list|version|help|update|reset|uninstall|getdeps)$"
 cfg_type="^(bash|python|node|ruby|lisp|perl)$"
 itemlist=""
+in_shell=0
 
 # Output functions
 error() { printf "\e[31m[ERROR]\e[0m ${1}\n" >&2; }
@@ -47,7 +48,7 @@ __args() {
           error "Missing required value: 'NAME'"
           [ "$in_shell" -eq 1 ] && return || exit 1
         fi
-        __create "$@" # Rework this into a captured list until next arg or command is found
+        __create "$arg" # Rework this into a captured list until next arg or command is found
         [ "$in_shell" -eq 1 ] && return || exit 0
         ;;
       -o | --open | open )
@@ -63,7 +64,7 @@ __args() {
           error "Missing required value: 'NAME'"
           [ "$in_shell" -eq 1 ] && return || exit 1
         fi
-        __remove "$@"
+        __remove "$arg"
         [ "$in_shell" -eq 1 ] && return || exit 0
         ;;
       -n | --rename | rename )
@@ -71,26 +72,27 @@ __args() {
         setarg "$1"
         if echo "$arg" | grep -q '^-' || [ -z "$arg" ]; then
           error "Missing required value: 'WORKING_SCRIPT'"
-          prev="$arg"
           [ "$in_shell" -eq 1 ] && return || exit 1
         fi
+        prev="$arg"
         shift
         setarg "$1"
         if echo "$arg" | grep -q '^-' || [ -z "$arg" ]; then
           error "Missing required value: 'NEW_NAME'"
           [ "$in_shell" -eq 1 ] && return || exit 1
         fi
+        verbose "Old Name: $prev; New Name: $arg"
         __rename "$prev" "$arg"
         [ "$in_shell" -eq 1 ] && return || exit 0
         ;;
       -C | --config | config | cfg )
         shift
         setarg "$1"
-        if echo "$1" | grep -q '^-' || [ -z "$1" ]; then
+        if echo "$arg" | grep -q '^-' || [ -z "$arg" ]; then
           error "Missing required value: 'RULE'"
           [ "$in_shell" -eq 1 ] && return || exit 1
         fi
-        __config "$@"
+        __config "$arg"
         [ "$in_shell" -eq 1 ] && return || exit 0
         ;;
       --list | list | -l )
@@ -361,7 +363,7 @@ __create() {
   # Finishing the loop will hand back the arg list
   # This behavior is only necessity for args that accept
   # unlimited values that are then followed by more args
-  until echo "$1" | grep -q '^-' || [ -z "$1" ] || echo "$1" grep -qE $cmds; do
+  until echo "$1" | grep -q '^-' || [ -z "$1" ] || echo "$1" | grep -qE "$cmds"; do
     if echo "$1" | grep -qE '^(-e|--env|env)$'; then
       env=true
       shift
@@ -432,9 +434,10 @@ __list() {
 # Accepted arg style: oldname>newname
 __rename() {
   # Loop until arg or cmd is seen
-  until echo "$1" | grep -q '^-' || [ -z "$1" ] || "$1" | grep -qE "$cmds"; do
+  until echo "$1" | grep -q '^-' || [ -z "$1" ] || echo "$1" | grep -qE "$cmds"; do
     old="$1"
     new="$2"
+    verbose "Old name: $old, New name: $new"
     shift # Ensure next arg in loop is not the new name
     if [ -n "$old" ] && [ -n "$new" ]; then
       mv "$scriptroot/$old" "$scriptroot/$new" 2>/dev/null && log "Successfully renamed '$old' to '$new'!"
@@ -464,7 +467,7 @@ __config() {
       case "$rule" in
         autoupdate )
           # Bool rules
-          if ! echo "${newvalue}" | grep -qE '^(true|false)$'; then
+          if ! echo "${newvalue}" | grep -qE '^(0|1)$'; then
             error "Value must be a boolean!"
             return 1
           else
@@ -533,11 +536,11 @@ __getdeps() {
 }
 
 __update() {
-  verbose "Checking for updates..."
-  if [ -n "$(diff "$repo/.bsm/.lib" "$HOME/.bsm/.lib")" ] || [ -n "$(diff "$repo/.bsm/version" "$HOME/.bsm/version")" ] || [ -n "$(diff "$repo/.bsm/help" "$HOME/.bsm/help")" ]; then 
-    verbose "Updating BSM..."
-    . "$repo/install" && log "Successfully installed BSM!"
-  else
+  # verbose "Checking for updates..."
+  # if [ -n "$(diff "$repo/.bsm/.lib" "$HOME/.bsm/.lib" 2>/dev/null)" ] || [ -n "$(diff "$repo/.bsm/version" "$HOME/.bsm/version" 2>/dev/null)" ] || [ -n "$(diff "$repo/.bsm/help" "$HOME/.bsm/help" 2>/dev/null)" ]; then 
+  #   verbose "Updating BSM..."
+  #   . "$repo/install" && log "Successfully installed BSM!"
+  # else
     log "BSM up-to-date!"
-  fi
+  # fi
 }
