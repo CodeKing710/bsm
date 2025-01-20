@@ -33,7 +33,7 @@ __loadcfg() {
 # Config vars will be set via function in-case of needing reloaded
 __loadcfg
 
-__args() 
+__args() {
   # Process args
   # Exit means arg list is not passed
   # Return means arg list recursively passed
@@ -185,7 +185,7 @@ __args()
 
   # Clear function vars
   unset arg
-
+}
 
 __sh() {
   # Load into alternate screen
