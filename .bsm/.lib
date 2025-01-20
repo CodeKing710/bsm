@@ -190,6 +190,7 @@ __args() {
 __sh() {
   # Load into alternate screen
   tput smcup
+  tput cup 0 0
   # Load BSM Shell options
   hush_motd="$(grep "hush_login" "$prgroot/sh.cfg" | cut -d= -f2)"
   # Welcome message
