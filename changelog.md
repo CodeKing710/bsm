@@ -1,6 +1,6 @@
 # BSM Changelog
 
-## What's New (v3.6.0)
+## What's New (v4.0.0)
 
 - Made some under-the-hood changes
 - Port to new application style
@@ -13,13 +13,12 @@
 - True Cross-platform compatibility
 - Legacy compliance (down to Bash 3.2)
 - Quicker launching
-- POSIX Installer option (will become default when ready)
+- BSM now runs on a POSIX base
+- Script generators moved to heredocs
 
-## What's Next (v4.0.0)
+## What's Next
 
-- Break out script generators into heredoc files
-- Add support for more languages
-- Version detection and bash detection
+- Who knows
 
 ## Bugs
 
