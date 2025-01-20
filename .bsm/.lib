@@ -446,7 +446,7 @@ __list() {
   fi
 }
 
-# Accepted arg style: oldname>newname
+# Accepted arg style: oldname newname
 __rename() {
   # Loop until arg or cmd is seen
   until echo "$1" | grep -q '^-' || [ -z "$1" ] || echo "$1" | grep -qE "$cmds"; do
