@@ -51,6 +51,6 @@ __bsm() {
 __bsm "$@"
 
 # Cleanup for accidental sourcing
-[ "$$" -eq "$PPID" ] && { unset __bsm __args __sh __cmds __create __open __remove __rename __config __list __cwd __cws prgroot scriptroot editor autoupdate defaulttype repo lists write error verbose; }
+[ "$$" -eq "$PPID" ] && { unset __bsm __args __sh __cmds __create __open __remove __rename __config __list __cwd __cws prgroot scriptroot editor autoupdate defaulttype repo lists write error verbose itemlist; }
 
 exit 0
