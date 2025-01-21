@@ -6,6 +6,7 @@ repo="$(grep 'repo_path' "$HOME/.bsm/app.cfg" | cut -d= -f2)"
 # Remove ${s_appname} from the system
 rm -rf "$HOME/.bsm"
 rm "$HOME/bin/bsm"
+[ -e "$HOME/.bash_completion.d/bsm-comp" ] && rm "$HOME/.bash_completion.d/bsm-comp"
 
 # Ask if the user would like to remove the repo
 printf "Would you like to remove the repo as well? [Y/n] "
