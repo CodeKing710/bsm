@@ -17,7 +17,7 @@ error() { printf "\e[31m[ERROR]\e[0m ${1}\n" >&2; }
 verbose() { [ -n "$VERBOSE" ] && printf "\e[32m[VERBOSE]\e[0m ${1}\n"; }
 log() { printf "\e[36m[BSM]\e[0m ${1}\n"; }
 setarg() {
-  if printf "$1" | grep -q '^-' || ! echo "$1" | grep -qE "$cmds"; then
+  if echo "$1" | grep -q '^-' || ! echo "$1" | grep -qE "$cmds"; then
     arg="$1"
   else
     arg="$(printf "$1" | tr '[:upper:]' '[:lower:]')"
