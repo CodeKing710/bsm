@@ -17,13 +17,13 @@ install() {
   cp -f "$repo/.bsm/version" "$HOME/.bsm/version" || return 1
   cp -f -r "$repo/.bsm/assets" "$HOME/.bsm/" || return 1
   # Add completion file to ~/.bash_completion.d, create if it doesn't exist
-  [ ! -e "$HOME/.bash_completion.d" ] && mkdir -p "$HOME/.bash_completion"
+  [ ! -d "$HOME/.bash_completion.d" ] && mkdir -p "$HOME/.bash_completion.d"
   cp -f "$repo/.bsm/bsm-comp" "$HOME/.bash_completion.d/bsm-comp"
   if ! grep -q "# BSM PATH ADD" "$HOME/.bashrc"; then
     printf "# BSM PATH ADD\n[ \"\$PATH\" != *\"\$HOME/scripts\"* ] && export PATH=\"\$HOME/scripts:\$PATH\"\n" >> "$HOME/.bashrc" || return 1
   fi
   if ! grep -q "# BSM Completion" "$HOME/.bashrc"; then
-    printf "# BSM Completion\n[ -e "\$HOME/.bash_completion.d" ] && source \$HOME/.bash_completion.d/bsm-comp\n" >> "$HOME/.bashrc"
+    printf "# BSM Completion\n[ -e "\$HOME/.bash_completion.d" ] && source \"\$HOME/.bash_completion.d/bsm-comp\"\n" >> "$HOME/.bashrc"
   fi
   printf "BSM installed!\n"
 }
