@@ -1,0 +1,9 @@
+#!/bin/sh
+
+script=$(cat << RBSCRIPT
+#!/usr/bin/env ruby
+
+# Script - $name
+# Purpose - 
+RBSCRIPT
+)

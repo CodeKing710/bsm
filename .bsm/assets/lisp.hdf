@@ -1,0 +1,9 @@
+#!/bin/sh
+
+script=$(cat << LISPSCRIPT
+#!/usr/bin/env -S sbcl --script
+
+; Script - $name
+; Purpose - 
+LISPSCRIPT
+)

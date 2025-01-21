@@ -1,0 +1,9 @@
+#!/bin/sh
+
+script=$(cat << SHSCRIPT
+#!/usr/bin/env bash
+
+# Script - $name
+# Purpose - 
+SHSCRIPT
+)

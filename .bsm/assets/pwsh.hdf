@@ -1,0 +1,9 @@
+#!/bin/sh
+
+script=$(cat << PWSHSCRIPT
+#!/usr/bin/env powershell
+
+# Script - $name
+# Purpose - 
+PWSHSCRIPT
+)

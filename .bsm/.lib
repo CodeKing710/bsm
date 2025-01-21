@@ -58,14 +58,26 @@ __args() {
         fi
         __create "$itemlist"
         if echo "$1" | grep -q -E '^(-o|--open|open)$'; then
-          __open "$itemlist"
+          __open "$__cws"
         fi
         [ "$in_shell" -eq 1 ] && return || exit 0
         ;;
       -o | --open | open )
         shift
         setarg "$1"
-        __open "$arg" # Rework to use captured list
+        if [ -z "$1" ]; then
+          error "Missing required value: 'NAME'"
+          [ "$in_shell" -eq 1 ] && return || exit 1
+        else
+          # Capture a list until a command or argument is found
+          itemlist="$arg"
+          shift
+          until echo "$1" | grep -q '^-' || echo "$1" | grep -q -E "$cmds" || [ -z "$1" ]; do
+            itemlist="$itemlist $1"
+          shift; done
+          verbose "Current list: $itemlist"
+        fi
+        __open "$itemlist" # Rework to use captured list
         [ "$in_shell" -eq 1 ] && return || exit 0
         ;;
       -r | --remove | remove | rm )
@@ -265,128 +277,156 @@ __create() {
   [ ! -e "$scriptroot" ] && mkdir "$scriptroot"
 
   # Check if venv location is supplied
-  envshebang="#!/usr/bin/env "
   env=""
   envpath=""
 
   # Inner type select func
   proctype() {
     name="$1"
-    # Node
+    # Node (VEM venv integration disabled)
     if echo "$name" | grep -q ".js"; then
       name="$(echo "$1" | cut -d. -f1)"
-      if [ -n "$env" ]; then
-        # [[ ! `command -v vem` ]] && echo -e "Must install Virtual Environment Manager to take advantage of Node Virtual Environments!\nRun \`git clone https://github.com/CodeKing710/vem; vem/install;\` to download and install VEM!" && exit
-        # VEM is optional to be able to manage your envs
-        # To allow reference, use the path to THE PARENT FOLDER of the node_modules folder that has the desired packages
-        # If VEM is installed, it will list your envs and check if the name exists then use that path
-        # Paths detected by the '/' that exists in each path
-        if [ -n "$(command -v vem)" ]; then
-          vemenv="$(vem js --path "$envpath" 2>/dev/null)"
-          [ -z "$vemenv" ] && error "No VEM env with name $envpath!" && exit
-          envpath="$vemenv"
-        else
-          # Assume path, bail upon no path
-          if ! echo "$envpath" | grep -q '/'; then
-            error "VEM must be installed to use names!\nIf this is a path, please prepend it with './' or use the absolute path!"
-            return 1
-          fi
-        fi
-        if [ ! -e "$envpath" ]; then
-          error "Environment path doesn't exist!"
-          error "$envpath"
-          return 1
-        else
-          # envshebang="#!$envpath/"
-          envpath="$envpath/node_modules/"
-          [ "$TERM_PROGRAM" = 'mintty' ] && envpath=$(cygpath -w "$envpath" | sed -e 's;\\;/;g;' | sed -e 's;/;//;g;' | sed -e 's;//;\\\\\\\\;g;')
-          mkfile "${envshebang}node\n\n" "${name}" "//" "const venv = '$envpath'\nconst getpkg = (loc) => {\n\t/**\n\t\tWith this being a venv,\n\t\tevery reference to a package that isn't directly in the project\n\t\tmust go through this wrapper\n\t\tto ensure node is looking in the right place.\n\n\t\tIf you are getting a package relative to your project,\n\t\tUSE REQUIRE!! Or use ESM import syntax\n\t**/\n\trequire(\`\${venv}\${loc}\`);\n}\n"
-        fi
-      else
-        mkfile "${envshebang}node\n\n" "${name}" "//"
-      fi
-    # Python
+      # if [ -n "$env" ]; then
+      #   # [[ ! `command -v vem` ]] && echo -e "Must install Virtual Environment Manager to take advantage of Node Virtual Environments!\nRun \`git clone https://github.com/CodeKing710/vem; vem/install;\` to download and install VEM!" && exit
+      #   # VEM is optional to be able to manage your envs
+      #   # To allow reference, use the path to THE PARENT FOLDER of the node_modules folder that has the desired packages
+      #   # If VEM is installed, it will list your envs and check if the name exists then use that path
+      #   # Paths detected by the '/' that exists in each path
+      #   if [ -n "$(command -v vem)" ]; then
+      #     vemenv="$(vem js --path "$envpath" 2>/dev/null)"
+      #     [ -z "$vemenv" ] && error "No VEM env with name $envpath!" && exit
+      #     envpath="$vemenv"
+      #   else
+      #     # Assume path, bail upon no path
+      #     if ! echo "$envpath" | grep -q '/'; then
+      #       error "VEM must be installed to use names!\nIf this is a path, please prepend it with './' or use the absolute path!"
+      #       return 1
+      #     fi
+      #   fi
+      #   if [ ! -e "$envpath" ]; then
+      #     error "Environment path doesn't exist!"
+      #     error "$envpath"
+      #     return 1
+      #   else
+      #     # envshebang="#!$envpath/"
+      #     envpath="$envpath/node_modules/"
+      #     [ "$TERM_PROGRAM" = 'mintty' ] && envpath=$(cygpath -w "$envpath" | sed -e 's;\\;/;g;' | sed -e 's;/;//;g;' | sed -e 's;//;\\\\\\\\;g;')
+      #     mkfile "${envshebang}node\n\n" "${name}" "//" "const venv = '$envpath'\nconst getpkg = (loc) => {\n\t/**\n\t\tWith this being a venv,\n\t\tevery reference to a package that isn't directly in the project\n\t\tmust go through this wrapper\n\t\tto ensure node is looking in the right place.\n\n\t\tIf you are getting a package relative to your project,\n\t\tUSE REQUIRE!! Or use ESM import syntax\n\t**/\n\trequire(\`\${venv}\${loc}\`);\n}\n"
+      #   fi
+      # else
+        mkfile "node" "${name}"
+      # fi
+    # Python (VEM & venv Integration disabled)
     elif echo "$name" | grep -q ".py"; then
       name="$(echo "$1" | cut -d. -f1)"
-      if [ -n "$env" ]; then
-        if [ -n "$(command -v vem)" ]; then
-          vemenv="$(vem py --path "$envpath" 2>/dev/null)"
-          [ -e "$vemenv/bin" ] && vemenv="$vemenv/bin" || vemenv="$vemenv/Scripts"
-          [ -z "$vemenv" ] && { error "No VEM env with name $envpath!"; return 1; }
-          envpath="$vemenv"
-        else
-          # Assume path, bail upon no path
-          if ! echo "$envpath" | grep -q '/'; then
-            error "VEM must be installed to use names!\nIf this is a path, please prepend it with './' or use the absolute path!"
-            return 1
-          fi
-        fi
-        if [ ! -e "$envpath" ]; then
-          error "Environment path doesn't exist!"
-          error "$envpath"
-          return 1
-        else
-          envshebang="#!$envpath/"
-          mkfile "${envshebang}python\n\n" "${name}" "#"
-        fi
-      else
-        mkfile "${envshebang}python\n\n" "${name}" "#"
-      fi
+      # if [ -n "$env" ]; then
+      #   if [ -n "$(command -v vem)" ]; then
+      #     vemenv="$(vem py --path "$envpath" 2>/dev/null)"
+      #     [ -e "$vemenv/bin" ] && vemenv="$vemenv/bin" || vemenv="$vemenv/Scripts"
+      #     [ -z "$vemenv" ] && { error "No VEM env with name $envpath!"; return 1; }
+      #     envpath="$vemenv"
+      #   else
+      #     # Assume path, bail upon no path
+      #     if ! echo "$envpath" | grep -q '/'; then
+      #       error "VEM must be installed to use names!\nIf this is a path, please prepend it with './' or use the absolute path!"
+      #       return 1
+      #     fi
+      #   fi
+      #   if [ ! -e "$envpath" ]; then
+      #     error "Environment path doesn't exist!"
+      #     error "$envpath"
+      #     return 1
+      #   else
+      #     envshebang="#!$envpath/"
+      #     mkfile "${envshebang}python\n\n" "${name}" "#"
+      #   fi
+      # else
+        mkfile "python" "${name}"
+      # fi
     # Ruby
     elif echo "$name" | grep -q ".rb"; then
       name="$(echo "$1" | cut -d. -f1)"
-      mkfile "${envshebang}ruby\n\n" "${name}" "#"
+      mkfile "ruby" "${name}"
     # LISP
     elif echo "$name" | grep -q ".cl"; then
       name="$(echo "$1" | cut -d. -f1)"
-      mkfile "${envshebang}-S sbcl --script\n\n" "${name}" ";"
+      mkfile "lisp" "${name}"
     # PowerShell
     elif echo "$name" | grep -q ".ps1"; then
       name="$(echo "$1" | cut -d. -f1)"
-      mkfile "${envshebang}powershell\n\n" "${name}" "#"
+      mkfile "pwsh" "${name}"
     # Perl
     elif echo "$name" | grep -q ".pl"; then
       name="$(echo "$1" | cut -d. -f1)"
-      mkfile "${envshebang}perl\n\n" "${name}" "#"
+      mkfile "perl" "${name}"
     # Bash
     elif echo "$name" | grep -q ".sh"; then
       name="$(echo "$1" | cut -d. -f1)"
-      mkfile "${envshebang}bash\n\n" "${name}" "#"
+      mkfile "bash" "${name}"
     # Default script type
     else
       name="$(echo "$1" | cut -d. -f1)"
-      mkfile "${envshebang}$(echo "$defaulttype" | sed -e 's;lisp;-S sbcl --script;gi;')\n\n" "${name}" "#"
+      mkfile "$defaulttype" "${name}"
     fi
   }
   # Inner file generator func
   mkfile() {
-    # $1 is the shebang line, $2 is the file itself
-    verbose "Writing data to script file..."
-    [ -n "$4" ] && verbose "Extra content: $4"
+    # $1 is type, $2 is the file name
+    # Capture args into variables
+    type="$1"
+    name="$2"
+    scriptloc="${scriptroot}/$name"
 
-    scriptloc="${scriptroot}/${2}"
-    if printf "${1}${3} Script - ${2}\n${3} Purpose: XYZ\n\n$([ -n "$4" ] && echo "${4}")" > "${scriptloc}"; then
-      log "Successfully created script '${2}'!"
+    # Capture the correct HDF into a variable
+    case "$type" in
+      sh | bash )
+        . "$prgroot/assets/bash.hdf"
+        ;;
+      py* )
+        . "$prgroot/assets/python.hdf"
+        ;;
+      ruby )
+        . "$prgroot/assets/ruby.hdf"
+        ;;
+      lisp )
+        . "$prgroot/assets/lisp.hdf"
+        ;;
+      powershell | pwsh )
+        . "$prgroot/assets/pwsh.hdf"
+        ;;
+      perl )
+        . "$prgroot/assets/perl.hdf"
+        ;;
+      j*s* | node )
+        . "$prgroot/assets/node.hdf"
+        ;;
+      * )
+        error "Not a type!"
+        return 1;;
+    esac
+
+    # Write the script
+    verbose "Writing data to script file..."
+
+    if printf "$script" > "${scriptloc}"; then
+      log "Successfully created script '$name'!"
     else
-      error "Failed to create script ${2} at ${scriptloc}!"
+      error "Failed to create script $name at ${scriptloc}!"
     fi
     # Make script executable to the user and the group
     chmod 755 "${scriptloc}"
+    unset content scriptloc script type name
   }
 
-  # Finishing the loop will hand back the arg list
-  # This behavior is only necessity for args that accept
-  # unlimited values that are then followed by more args
-  # Set current working script (__cws) to the item list
-  __cws="$1"
+  # Loop the item list (VEM venv integration disabled for now)
   for item in $1; do
     verbose "Item: $item"
-    if echo "$item" | grep -qE '^(-e|--env|env)$'; then
-      env=true
-      shift
-      envpath="$item"
-      shift
-    fi
+    # if echo "$item" | grep -qE '^(-e|--env|env)$'; then
+    #   env=true
+    #   shift
+    #   envpath="$item"
+    #   shift
+    # fi
     name="$item"
     
     verbose "Script name: $(echo "$name" | cut -d. -f1)"
@@ -406,15 +446,22 @@ __create() {
     fi
     env=""
     envpath=""
+    if [ -z "$__cws" ]; then
+      __cws="$(echo "$name" | cut -d. -f1)"
+    else
+      __cws="$__cws $(echo "$name" | cut -d. -f1)"
+    fi
   done
 }
 
 __open() {
-  # openitems=""
-  for item in $__cws; do
+  openitems="$1"
+  verbose "Script List: $openitems"
+  log "Opening scripts..."
+  
+  for item in $openitems; do
     if [ ! -e "$scriptroot/$item" ]; then
-      error "No file to open!"
-      return
+      error "Couldn't open script \"$item\"!"
     else
       $editor "$scriptroot/$item"
     fi

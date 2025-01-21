@@ -1,0 +1,9 @@
+#!/bin/sh
+
+script=$(cat << JSSCRIPT
+#!/usr/bin/env node
+
+// Script - $name
+// Purpose - 
+JSSCRIPT
+)

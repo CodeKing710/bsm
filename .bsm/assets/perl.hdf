@@ -1,0 +1,9 @@
+#!/bin/sh
+
+script=$(cat << PLSCRIPT
+#!/usr/bin/env perl
+
+# Script - $name
+# Purpose - 
+PLSCRIPT
+)

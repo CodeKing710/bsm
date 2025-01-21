@@ -1,92 +1,95 @@
 # Bash Script Manager (v3)
 
 This is a local script manager that allows you to add custom scripts to your system without affecting the baseline OS scripts.
-Install options for user and system (System install coming soon!) available!
+
 This program is open-source as well as open-minded!
+
 Any ideas or QoL improvements that you think could be made to BSM reach out or fork the repo and make a pull request!
 
-__NOTE: THIS SCRIPT IS INTENDED FOR USE ON DEBIAN/UBUNTU BASED DISTRIBUTIONS!__
+__FUNCTIONS ON ALL POSIX SYSTEMS!__
 
-__FUNCTIONS WITH WINDOWS SUBSYSTEM FOR LINUX!__
+Support for Bash, Node, Python, Ruby, Perl, and LISP scripts. PowerShell has limited support in this app.
 
-Support for Bash, Node, Python, Ruby, and LISP scripts. PowerShell available on WSL (Working on dynamic powershell detection for Linux users with Unix PowerShell installed).
+___
 
 ## Installation
 
 To install, run the install script once repo is cloned. If it won't open, run the following:
 
 ```bash
-sudo chmod +x "$(find `find ~ -type d -name bsm` -type f -name install)"
+# This command assumes you have the BSM repo in your home directory!
+chmod +x "$(find "$(find ~ -type d -name bsm)" -type f -name install)"
 ```
-
-_BSMv1 can still be installed if you prefer a lower profile version of BSM, called and installed from the /old folder in the repo!_
 
 To finalize installation, restart the shell or run `source ~/.bashrc` to reload your PATH. This will need done after both installation and uninstallation
 Possible cleanup of your `.bashrc` file may need done upon removal of BSM from the system
 
 ## Usage
 
-Making a script of any kind is very simple. Simply run the following, replacing 'SCRIPT' with your desired script name (defaults to bash script);
+Making a script of any kind is very simple. Default typing is Bash. Let's start by creating a script called first-script
 
-```bash
-bsm -c "[SCRIPT]"
+```sh
+bsm create first-script
 ```
 
-You can have the script open right away in your configured editor (default nano) for editing if you are only working on the one script;
+You can have the script open right away in your configured editor (default nano) for editing by tagging the operation with `open`;
 
-```bash
-bsm -c "[SCRIPT]" -o
+```sh
+bsm create first-script open
 ```
 
 The create argument for BSM allows you predefine the script type via the file extension in the script name.
+This is done quite easily. If we wanted `first-script` to be made for Python, we can swap out the name for `first-script.py` in the create operation.
 
 Removing a script is as simple as specifying the scripts name(s) to remove;
-```bash
-bsm -r my-script # Removes the one script
-bsm -r my-script my-2-script # Removes both scripts
+
+```sh
+bsm rm my-script # Removes the one script
+bsm rm my-script my-2-script # Removes both scripts
 ```
 
-Now that you have a script made, you can use the "-l" flag to list out all the scripts you've made in a nice easy-to-read fashion.
+Now that you have a script made, you can use the `-l` flag or the command `list` to list out all the scripts you've made in a nice easy-to-read fashion. For them all to be on separate lines, append `rows` to the operation
 
-```bash
-bsm -l
+```sh
+bsm list
+bsm list rows
 ```
 
-If you named your script wrong, don't fret! You can use the `-n` flag to rename a script! The arg schema is as follows: oldname&gt;newname
+If you named your script wrong, don't fret! You can use the `-n` flag or `rename` command to rename a script!
 
-```bash
-bsm -n [WRONG_SCRIPT]>[NAME_YOU_WANT]
+```sh
+bsm rename wrong-name right-name
 ```
 
-For any help in case you forget how to use the command, you can use `bsm -h` or `bsm --help`. Versioning info can be found with `bsm -v`. Verbose logging of each command can be done by adding `-V` at the beginning of the command.
+For any help in case you forget how to use the command, you can use `bsm -h` or `bsm --help`. Versioning info can be found with `bsm -v`. Verbose logging of each command can be done by adding `-V` to your command.
 
 BSM supports a command-based shell as well, run by supplying no arguments of any kind or through `bsm --interactive`. Commands mimic their argument-based counterparts, function the same as well. More info below!
 
 BSM has configurable settings, and thus has a way to get/set those settings. It can be done like so:
 
-```bash
-bsm -C list # Shows all available settings
+```sh
+bsm cfg list # Shows all available settings
 
-bsm -C editor # Shows what editor is currently set to
+bsm cfg editor # Shows what editor is currently set to
 
-bsm -C autoupdate=false # Changes autoupdate setting to false
+bsm cfg autoupdate=false # Changes autoupdate setting to false
 
-bsm -C editor=code autoupdate # Sets editor to code, shows what autoupdate is currently set to
+bsm cfg editor=code # Sets editor to code
 ```
 
 ## Extra Goodies
 
 ### Command-mode & BSM Shell
 
-BSM supports commands for those who prefer full words to shorthand arguments. These function the exact same as normal arguments, and can be used in tandem with arguments as well. Sometimes you need arguments because a command won't exist for it. Great example is verbose logging. This cannot be used in the BSM Shell, but can be used with commands, as long as it comes first you will see logging for every action made, otherwise it will start logging once it sees the `-V` or `--verbose` flags.
+BSM supports commands for those who prefer full words to shorthand arguments. These function the exact same as normal arguments, and can be used in tandem with arguments as well. Please note that verbose logging is a toggle and should generally be run before continuing when in the shell, and should be the first argument when running the command inline.
 
-Commands are the basis for using the BSM Shell. Arguments are not supported until after the first command, where any number of subarguments or normal arguments could appear in place of commands. To leave the BSM Shell, use `exit` or `quit`. BSM Shell currently does not support arrow keys (will cause arbitrary characters to be added to input that are invisible and cause BSM to misread commands). If you want to use a previous command, try copy-paste!
+Commands are the basis for using the BSM Shell. Arguments are more of a shorthand if you understand them, otherwise they can be used interchangably in the shell. To leave the BSM Shell, use `exit` or `quit`. BSM Shell currently does not support arrow keys (will cause arbitrary characters to be added to input that are invisible and cause BSM to misread commands). History similar to how Bash handles history will be added eventually.
 
 ### Fixing BSM
 
-BSM will assist in more than just installing and uninstalling BSM from your system. BSM offers an option to repair the install of BSM currently on the system (Updating alongside fixing). BSM automatically updates when it detects a new pull on the repo. This can be turned off and you can manually update via `bsm --update`. On older versions of BSM, these commands can be run directly from BSM in different formats or from BSM-Install, refer to the help page for more info if you run into any issues with the older versions.
+BSM will assist in more than just installing and uninstalling BSM from your system. BSM offers an option to repair the install of BSM currently on the system (Updating alongside fixing). BSM automatically updates when it detects a new pull on the repo. This can be turned off and you can manually update via `bsm --update`.
 
-__NOTE: Ability to run these commands in old BSM has been deprecated due to confliction of commands and confusion of argument names. There is a chance you may still find that some of the commands in the older versions still work but have unexpected results!__
+__NOTE: Disabling autoupdate may produce unexpected results! Autoupdate itself may also produce unexpected results if the files don't write in time!__
 
 But let's say that your BSM install works just fine, but the underlying dependencies that run specific types of scripts are broken. Using `bsm --dependencies` will reinstall some or all dependencies based on whether you pass the option or not. Naming is not case sensitive and some allow for the nickname to be passed instead. Available deps include:
 
@@ -94,11 +97,6 @@ But let's say that your BSM install works just fine, but the underlying dependen
 - Python
 - Ruby
 - LiSP
-
-### Fresh Starts
-
-By using `bsm -r ALL`, you can remove every script from your script directory and start fresh!
-DO THIS WITH CAUTION AS YOU WILL NOT BE ABLE TO GET THE SCRIPTS BACK ONCE THEY ARE REMOVED!
 
 Refer to changelog for features, outstanding bugs, and more.
 

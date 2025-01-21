@@ -12,9 +12,10 @@ install() {
   [ ! -e "$HOME/.bsm/.cfg" ] && cp -f "$repo"/.bsm/.cfg "$HOME/.bsm/.cfg"
   [ ! -e "$HOME/.bsm/sh.cfg" ] && cp -f "$repo"/.bsm/sh.cfg "$HOME/.bsm/sh.cfg"
   cp -f "$repo/.bsm/motd.txt" "$HOME/.bsm/motd.txt" || return 1
-  cp -f "$repo"/.bsm/.lib "$HOME"/.bsm/.lib || return 1
-  cp -f "$repo"/.bsm/help "$HOME"/.bsm/help || return 1
-  cp -f "$repo"/.bsm/version "$HOME"/.bsm/version || return 1
+  cp -f "$repo/.bsm/.lib" "$HOME/.bsm/.lib" || return 1
+  cp -f "$repo/.bsm/help" "$HOME/.bsm/help" || return 1
+  cp -f "$repo/.bsm/version" "$HOME/.bsm/version" || return 1
+  cp -f -r "$repo/.bsm/assets" "$HOME/.bsm/" || return 1
   # Attempt to add completion to system, otherwise default to ~/.d/
   cp -f "$repo/.bsm/bsm-comp" "$HOME/.d/bsm-comp"
   if ! grep -q "# BSM PATH ADD" "$HOME/.bashrc"; then

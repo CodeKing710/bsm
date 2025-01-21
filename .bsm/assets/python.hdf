@@ -1,0 +1,9 @@
+#!/bin/sh
+
+script=$(cat << PYSCRIPT
+$(if command -v python; then echo '#!/usr/bin/env python'; else echo '#!/usr/bin/env python3'; fi)
+
+# Script - $name
+# Purpose - 
+PYSCRIPT
+)
