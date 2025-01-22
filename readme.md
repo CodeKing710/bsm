@@ -10,6 +10,8 @@ __FUNCTIONS ON ALL POSIX SYSTEMS!__
 
 Support for Bash, Node, Python, Ruby, Perl, and LISP scripts. PowerShell has limited support in this app.
 
+Support for creating a POSIX daemon to run scripts in the background.
+
 ___
 
 ## Installation
