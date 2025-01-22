@@ -1,0 +1,74 @@
+#!/bin/sh
+
+paren=')'
+script=$(cat << DAEMON
+#!/bin/sh
+
+# This is a script designed to be used as a daemon
+# The encapsulating function will contain the logic desired for the daemon
+# Once started, it can be stopped with \`$name stop\`
+# Once stopped, it will cleanup any temp files
+
+__${name}_d() {
+  # This is the main function for the daemon
+  while true; do
+    echo "I am running" # Adjust this with your desired output
+    sleep 1 # Adjust sleep period as desired
+  done
+}
+__stop_${name}_d() {
+  # This is the function to stop the daemon
+  if [ -e "\$HOME/.${name}_pid" ]; then
+    kill "\$(cat "\$HOME/.${name}_pid")"
+    rm "$HOME/.${name}_pid"
+    rm "$HOME/.${name}.log"
+    printf "Daemon ${name} stopped.\\\\n"
+  else
+    printf "Daemon ${name} is not running.\\\\n"
+  fi
+}
+__start_${name}_d() {
+  # This is the function to start the daemon
+  nohup bash -c '__${name}_d' > "\$HOME/.${name}.log" 2>&1 &
+  echo "\$!" > "\$HOME/.${name}_pid"
+  printf "Daemon ${name} started.\\\\n"
+}
+
+# Export to ensure nohup can access the function
+export -f __${name}_d
+export -f __stop_${name}_d
+export -f __start_${name}_d
+
+# Parse arguments
+if [ -z "\$1" ]; then
+  if [ -e "\$HOME/.${name}_pid" ]; then
+    __stop_${name}_d
+  else
+    __start_${name}_d
+  fi
+fi
+while [ -n "\$1" ]; do
+  case "\$1" in
+    check $paren
+      if [ -e "\$HOME/.${name}_pid" ]; then
+        printf "Daemon ${name} is running on PID \$(cat "\$HOME/.${name}_pid").\\\\n"
+      else
+        printf "Daemon ${name} is not running.\\\\n"
+      fi
+      ;;
+    start $paren
+      __start_${name}_d
+      ;;
+    stop $paren
+      __stop_${name}_d
+      ;;
+    * $paren
+      printf "\"\$1\" is not an argument!"
+      exit 1
+      ;;
+  esac
+  shift
+done
+DAEMON
+)
+unset paren

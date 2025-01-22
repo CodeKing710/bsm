@@ -1,20 +1,15 @@
 # BSM Changelog
 
-## What's New (v4.0.0)
+## What's New (v4.1.0)
 
-- Made some under-the-hood changes
-- Port to new application style
-- Removed various unnecessary or unready functions
-- Refined program size
-- Default script type settings
-- Color output
-- Virtual Environment support for Python and Node
-- Support for VEM (Virtual Environment Manager) users (Input name instead of path)
-- True Cross-platform compatibility
-- Legacy compliance (down to Bash 3.2)
-- Quicker launching
-- BSM now runs on a POSIX base
 - Script generators moved to heredocs
+- Improved error handling
+- Improved documentation
+- Improved code quality
+- Improved performance
+- Improved user experience
+- Improved compatibility with various systems
+- Added special daemon script type
 
 ## What's Next
 

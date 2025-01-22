@@ -14,12 +14,13 @@ if [ -n "$autoupdate" ]; then
 	fi
 
   # Check for updates
-  if [ -n "$(diff "$repo"/.bsm/.lib "$HOME"/.bsm/.lib)" ] \
-  || [ -n "$(diff "$repo"/.bsm/version "$HOME"/.bsm/version)" ] \
-  || [ -n "$(diff "$repo"/.bsm/motd.txt "$HOME"/.bsm/motd.txt)" ] \
-  || [ -n "$(diff "$repo"/.bsm/help "$HOME"/.bsm/help)" ] \
-  || [ -n "$(diff "$repo"/bsm "$HOME"/bin/bsm)" ] \
-  || [ -n "$(diff "$repo"/.bsm/bsm-comp "$HOME"/.d/bsm-comp)" ]; then
+  if [ -n "$(diff "$repo/.bsm/.lib" "$HOME/.bsm/.lib")" ] \
+  || [ -n "$(diff "$repo/.bsm/version" "$HOME/.bsm/version")" ] \
+  || [ -n "$(diff "$repo/.bsm/motd.txt" "$HOME/.bsm/motd.txt")" ] \
+  || [ -n "$(diff "$repo/.bsm/help" "$HOME/.bsm/help")" ] \
+  || [ -n "$(diff "$repo/bsm" "$HOME/bin/bsm")" ] \
+  || [ -n "$(diff "$repo/.bsm/bsm-comp" "$HOME/.bash_completion.d/bsm-comp")" ] \
+  || [ -n "$(diff "$repo/.bsm/assets" "$HOME/.bsm/assets")" ]; then
     . "$repo/install"
   fi
 

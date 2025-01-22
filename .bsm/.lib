@@ -363,6 +363,10 @@ __create() {
     elif echo "$name" | grep -q ".sh"; then
       name="$(echo "$1" | cut -d. -f1)"
       mkfile "bash" "${name}"
+    # Daemon Script
+    elif echo "$name" | grep -q ".dmon"; then
+      name="$(echo "$1" | cut -d. -f1)"
+      mkfile "daemon" "${name}"
     # Default script type
     else
       name="$(echo "$1" | cut -d. -f1)"
@@ -381,6 +385,9 @@ __create() {
     case "$type" in
       sh | bash )
         . "$prgroot/assets/bash.hdf"
+        ;;
+      daemon )
+        . "$prgroot/assets/daemon.hdf"
         ;;
       py* )
         . "$prgroot/assets/python.hdf"
@@ -463,7 +470,8 @@ __open() {
     if [ ! -e "$scriptroot/$item" ]; then
       error "Couldn't open script \"$item\"!"
     else
-      $editor "$scriptroot/$item"
+      verbose "Editor: $editor"
+      "$editor" "$scriptroot/$item"
     fi
   done
 }
@@ -485,7 +493,7 @@ __list() {
   if [ ! -e "$scriptroot" ] || [ -z "$list" ]; then
     log "No Scripts Created Yet!"
   else
-    if echo "$1" | grep -qE '^(-1|rows)$'; then
+    if echo "$1" | grep -q -E '^(-1|rows)$'; then
       printf "$list\n"
     else
       printf "$list\n" | column
@@ -496,7 +504,7 @@ __list() {
 # Accepted arg style: oldname newname
 __rename() {
   # Loop until arg or cmd is seen
-  until echo "$1" | grep -q '^-' || [ -z "$1" ] || echo "$1" | grep -qE "$cmds"; do
+  until echo "$1" | grep -q '^-' || [ -z "$1" ] || echo "$1" | grep -q -E "$cmds"; do
     old="$1"
     new="$2"
     verbose "Old name: $old, New name: $new"
@@ -515,11 +523,11 @@ __config() {
   # Inner log function
   rwrite() {
     verbose "Setting rule from $oldvalue to $newvalue"
-    sed -i -e "s/$rule=$oldvalue/$rule=$newvalue/" "$cfg"
+    sed -i -e "s|$rule=$oldvalue|$rule=$newvalue|" "$cfg"
     log "Updated rule $rule from $oldvalue to $newvalue!"
   }
   cfg="$prgroot/.cfg"
-  until echo "$1" | grep -q '^-' || [ -z "$1" ] || echo "$1" | grep -qE "$(echo "$cmds" | sed 's/|list//g')"; do
+  until echo "$1" | grep -q '^-' || [ -z "$1" ] || echo "$1" | grep -q -E "$(echo "$cmds" | sed 's/|list//g')"; do
     if echo "$1" | grep -q '='; then
       rule="$(echo "$1" | cut -d= -f1)"
       oldvalue="$(grep "$rule" "$cfg" | cut -d= -f2)"
@@ -529,7 +537,7 @@ __config() {
       case "$rule" in
         autoupdate )
           # Bool rules
-          if ! echo "${newvalue}" | grep -qE '^(0|1)$'; then
+          if ! echo "${newvalue}" | grep -q -E '^(0|1)$'; then
             error "Value must be a boolean!"
             return 1
           else
@@ -538,7 +546,7 @@ __config() {
           ;;
         defaulttype )
           # Type rules
-          if ! echo "${newvalue}" | grep -qE "$cfg_type"; then
+          if ! echo "${newvalue}" | grep -q -E "$cfg_type"; then
             error "Value must be Bash, Python, Ruby, LISP, Perl, or Node!"
             return 1
           else
