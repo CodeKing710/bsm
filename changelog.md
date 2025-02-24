@@ -13,7 +13,7 @@
 
 ## What's Next
 
-- Who knows
+- Add a swift script option for those who prefer swift
 
 ## Bugs
 

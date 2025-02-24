@@ -8,7 +8,7 @@ __cws=""
 prgroot="$HOME/.bsm"
 scriptroot="$HOME/scripts"
 cmds="^(create|open|rename|remove|config|sh|shell|list|version|help|update|reset|uninstall|getdeps)$"
-cfg_type="^(bash|python|node|ruby|lisp|perl)$"
+cfg_type="^(bash|python|node|ruby|lisp|perl|daemon|swift)$"
 itemlist=""
 in_shell=0
 
@@ -367,6 +367,10 @@ __create() {
     elif echo "$name" | grep -q ".dmon"; then
       name="$(echo "$1" | cut -d. -f1)"
       mkfile "daemon" "${name}"
+    # Swift Script
+    elif echo "$name" | grep -q ".swift"; then
+      name="$(echo "$1" | cut -d. -f1)"
+      mkfile "swift" "${name}"
     # Default script type
     else
       name="$(echo "$1" | cut -d. -f1)"
@@ -388,6 +392,9 @@ __create() {
         ;;
       daemon )
         . "$prgroot/assets/daemon.hdf"
+        ;;
+      swift )
+        . "$prgroot/assets/swift.hdf"
         ;;
       py* )
         . "$prgroot/assets/python.hdf"
@@ -603,6 +610,7 @@ __getdeps() {
   sudo apt-get install python
   sudo apt-get install ruby
   sudo apt-get install sbcl
+  log "To install Swift, refer to the Swift website"
 }
 
 __update() {

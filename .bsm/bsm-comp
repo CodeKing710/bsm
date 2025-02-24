@@ -8,7 +8,7 @@ _bsm_completions() {
   local ARGS="-c -o -n -r -l -C -v -h -? -V"
   local LONGARGS="--create --open --rename --remove --list --config --version --help --verbose --update --interactive --reset-cfg --reset-shcfg --uninstall --dependencies"
   local CONFIGOPTS="list RESET autoupdate defaulttype editor"
-  local TYPES="bash python node ruby lisp perl"
+  local TYPES="bash python node ruby lisp perl daemon swift"
 
   if [[ "$cur" == -* ]]; then
     COMPREPLY=( $(compgen -W "$ARGS $LONGARGS" -- "$cur") )
