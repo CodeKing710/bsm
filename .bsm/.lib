@@ -214,18 +214,29 @@ __sh() {
   # Load into alternate screen
   tput smcup
   tput cup 0 0
+
   # Load BSM Shell options
   hush_motd="$(grep "hush_login" "$prgroot/sh.cfg" | cut -d= -f2)"
+
+  # Set the REPL history
+  history_file="$prgroot/repl.history"
+  touch "$history_file"
+  history -r "$history_file"
+
   # Welcome message
   [ "$hush_motd" = "false" ] && printf "$(cat "$prgroot/motd.txt")\n\n"
+
   # Purposeful infinite loop
   while true; do
-    printf "\e[1;36mbsm\e[0m> "
-    read -r stdin
+    read -e -r -p $'\e[1;36mbsm\e[0m> ' stdin
+    history -s "$stdin"
+    history -w "$history_file"
     if echo "$stdin" | grep -q -E '(exit|quit|q)'; then
       break
     elif [ "$stdin" = "pass" ]; then
       continue
+    elif [ "$stdin" = "clear" ]; then
+      clear
     elif echo "$stdin" | grep -q "pass"; then
       bash -c "$(echo "$stdin" | cut -d ' ' -f2-)"
     else
