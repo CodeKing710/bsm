@@ -1,16 +1,35 @@
 #!/bin/sh
 
+# Temp verbose logging function
+VERBOSE=0
+verbose() {
+  if [ "$VERBOSE" = 1 ]; then
+    while [ -n "$1" ]; do
+      echo "$1"
+    shift; done
+  fi
+}
+
 # BSM's installer
 install() {
   if [ -e "$HOME/repos/bsm" ]; then
 		repo="$HOME/repos/bsm"
 	else
-		repo="$(find "$HOME" -type d -name bsm 2>/dev/null)"
+		repo="$(\find "$HOME" -type d -name bsm 2>/dev/null || echo "")"
+    if [ -z "$repo" ]; then
+      repo="$(\find / -type d -name bsm/.bsm 2>/dev/null || echo "")"
+      if [ -z "$repo" ]; then
+        echo "Aborting Install, unable to find repo!"
+        return 1
+      fi
+    fi
 	fi
-  cp -f "$repo"/bsm "$HOME"/bin/bsm || return 1
+  verbose "Repo path: $repo"
+  verbose "HOME path: $HOME"
+  cp -f "$repo/bsm" "/usr/local/bin/bsm" || return 1
   [ ! -e "$HOME/.bsm" ] && mkdir "$HOME/.bsm"
-  [ ! -e "$HOME/.bsm/.cfg" ] && cp -f "$repo"/.bsm/.cfg "$HOME/.bsm/.cfg"
-  [ ! -e "$HOME/.bsm/sh.cfg" ] && cp -f "$repo"/.bsm/sh.cfg "$HOME/.bsm/sh.cfg"
+  [ ! -e "$HOME/.bsm/.cfg" ] && cp -f "$repo/.bsm/.cfg" "$HOME/.bsm/.cfg"
+  [ ! -e "$HOME/.bsm/sh.cfg" ] && cp -f "$repo/.bsm/sh.cfg" "$HOME/.bsm/sh.cfg"
   cp -f "$repo/.bsm/motd.txt" "$HOME/.bsm/motd.txt" || return 1
   cp -f "$repo/.bsm/.lib" "$HOME/.bsm/.lib" || return 1
   cp -f "$repo/.bsm/help" "$HOME/.bsm/help" || return 1
@@ -18,7 +37,7 @@ install() {
   cp -f -r "$repo/.bsm/assets" "$HOME/.bsm/" || return 1
   # Add completion file to ~/.bash_completion.d, create if it doesn't exist
   [ ! -d "$HOME/.bash_completion.d" ] && mkdir -p "$HOME/.bash_completion.d"
-  cp -f "$repo/.bsm/bsm-comp" "$HOME/.bash_completion.d/bsm-comp"
+  cp -f "$repo/.bsm/bsm-comp" "$HOME/.bash_completion.d/bsm-comp" || return 1
   if ! grep -q "# BSM PATH ADD" "$HOME/.bashrc"; then
     printf "# BSM PATH ADD\n[ \"\$PATH\" != *\"\$HOME/scripts\"* ] && export PATH=\"\$HOME/scripts:\$PATH\"\n" >> "$HOME/.bashrc" || return 1
   fi
@@ -28,5 +47,12 @@ install() {
   printf "BSM installed!\n"
 }
 
-install "$@"
+if [ "$1" = "-V" ]; then
+  VERBOSE=1
+fi
+
+install
+bsm_install_exit_status="$?"
 unset repo # Just in case
+verbose $bsm_install_exit_status
+unset verbose bsm_install_exit_status

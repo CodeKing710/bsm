@@ -11,6 +11,13 @@ if [ -n "$autoupdate" ]; then
 		export repo="$HOME/repos/bsm"
 	else
 		export repo="$(find "$HOME" -type d -name bsm 2>/dev/null)"
+    if [ -z "$repo" ]; then
+      export repo="$(find / -type d -name bsm/.bsm 2>/dev/null)"
+      if [ -z "$repo" ]; then
+        echo "Couldn't find repo, not attempting to update" >> "$HOME/.bsm/app.log"
+        break
+      fi
+    fi
 	fi
 
   # Check for updates
@@ -18,7 +25,7 @@ if [ -n "$autoupdate" ]; then
   || [ -n "$(diff "$repo/.bsm/version" "$HOME/.bsm/version")" ] \
   || [ -n "$(diff "$repo/.bsm/motd.txt" "$HOME/.bsm/motd.txt")" ] \
   || [ -n "$(diff "$repo/.bsm/help" "$HOME/.bsm/help")" ] \
-  || [ -n "$(diff "$repo/bsm" "$HOME/bin/bsm")" ] \
+  || [ -n "$(diff "$repo/bsm" "/usr/local/bin/bsm")" ] \
   || [ -n "$(diff "$repo/.bsm/bsm-comp" "$HOME/.bash_completion.d/bsm-comp")" ] \
   || [ -n "$(diff "$repo/.bsm/assets" "$HOME/.bsm/assets")" ]; then
     . "$repo/install"
@@ -43,6 +50,7 @@ fi
 __bsm() {
   # Go interactive if no arguments or commands are passed
   if [ -z "$1" ]; then
+    echo "[$(date)] Running interactive BSM session" >> "$logfile"
     __args --interactive
   else
     __args "$@"

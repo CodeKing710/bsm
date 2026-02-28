@@ -7,6 +7,7 @@ __cwd="$(pwd)"
 __cws=""
 prgroot="$HOME/.bsm"
 scriptroot="$HOME/scripts"
+logfile="$prgroot/app.log"
 cmds="^(create|open|rename|remove|config|sh|shell|list|version|help|update|reset|uninstall|getdeps)$"
 cfg_type="^(bash|python|node|ruby|lisp|perl|daemon|swift)$"
 itemlist=""
@@ -49,18 +50,20 @@ __args() {
           [ "$in_shell" -eq 1 ] && return || exit 1
         else
           # Capture a list until a command or argument is found
-          itemlist="$arg"
+          itemlist="\"$arg\""
           shift
           until echo "$1" | grep -q '^-' || echo "$1" | grep -q -E "$cmds" || [ -z "$1" ]; do
-            itemlist="$itemlist $1"
+            itemlist="$itemlist \"$1\""
           shift; done
           verbose "Current list: $itemlist"
         fi
-        __create "$itemlist"
-        if echo "$1" | grep -q -E '^(-o|--open|open)$'; then
-          __open "$__cws"
+        log "Creating script(s)..."
+        __create $(echo "$itemlist" | tr -d "\"")
+        sleep 1
+        if echo "$1" | grep -q -E '(-o|--open|open)'; then
+          __open $(echo "$itemlist" | tr -d "\"")
         fi
-        [ "$in_shell" -eq 1 ] && return || exit 0
+#        [ "$in_shell" -eq 1 ] && return || exit 0
         ;;
       -o | --open | open )
         shift
@@ -151,6 +154,14 @@ __args() {
         cat "$prgroot/version"
         [ "$in_shell" -eq 1 ] && return || exit 0
         ;;
+      -L | --logs | logs )
+        cat "$logfile"
+        [ "$in_shell" -eq 1 ] && return || exit 0
+        ;;
+      -X | --clear-logs | clear-logs )
+        printf "" > "$logfile"
+        [ "$in_shell" -eq 1 ] && return || exit 0
+        ;;
       --update | update )
         __update
         [ "$in_shell" -eq 1 ] && return || exit 0
@@ -211,7 +222,7 @@ __sh() {
   while true; do
     printf "\e[1;36mbsm\e[0m> "
     read -r stdin
-    if [ "$stdin" = "exit" ] || [ "$stdin" = "quit" ]; then
+    if echo "$stdin" | grep -q -E '(exit|quit|q)'; then
       break
     elif [ "$stdin" = "pass" ]; then
       continue
